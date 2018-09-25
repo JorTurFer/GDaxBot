@@ -20,16 +20,21 @@ namespace GDaxBot
 
         static void Main(string[] args)
         {
-            //Registro todo el IOC
-            RegisterIOC();
+            try
+            {
+                //Registro todo el IOC
+                RegisterIOC();
 
+                var bot = ServiceProvider.GetService<ITelegramBot>();
+                
 
-            var bot = ServiceProvider.GetService<ITelegramBot>();
-
-            bot.SendMessage("Hola");
-            bot.SendMessage("¿Que tal?");
-
-            Console.ReadKey();
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                //Envio aviso de que hay un error
+                ServiceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio.\nRazon->{ex.Message}");
+            }
         }
 
         static void RegisterServices(IServiceCollection services)

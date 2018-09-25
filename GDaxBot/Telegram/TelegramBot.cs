@@ -20,6 +20,7 @@ namespace GDaxBot.Telegram
             _bot = new TelegramBotClient(secrets.Value.TelegramBotKey);
             _bot.OnMessage += _bot_OnMessage;
             _bot.StartReceiving();
+            SendMessage("Iniciando los servicios de monitorizacion");
         }
 
         public void SendMessage(string Message)
