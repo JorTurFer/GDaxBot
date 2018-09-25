@@ -1,4 +1,6 @@
-﻿using GDaxBot.Telegram;
+﻿using CoinbasePro.Network.Authentication;
+using GDaxBot.Coinbase;
+using GDaxBot.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -21,12 +23,13 @@ namespace GDaxBot
         static void Main(string[] args)
         {
             try
-            {
+            {    
                 //Registro todo el IOC
                 RegisterIOC();
 
-                var bot = ServiceProvider.GetService<ITelegramBot>();
-                
+                //var bot = ServiceProvider.GetService<ITelegramBot>();
+                var coinbase = ServiceProvider.GetService<ICoinbaseService>();
+
 
                 Console.ReadKey();
             }
@@ -40,6 +43,7 @@ namespace GDaxBot
         static void RegisterServices(IServiceCollection services)
         {
             services.AddSingleton<ITelegramBot, TelegramBot>();
+            services.AddSingleton<ICoinbaseService, CoinbaseService>();
         }
 
         static void RegisterIOC()

@@ -8,5 +8,9 @@ namespace GDaxBot
     {
         public string TelegramBotKey { get; set; }
         public int UserID { get; set; }
+
+        public string CoinbaseKey { get; set; }
+        public string CoinbaseSecret { get; set; }
+        public string CoinbasePassword { get; set; }
     }
 }

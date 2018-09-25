@@ -35,10 +35,11 @@ namespace GDaxBot.Telegram
             if (message == null || message.Type != MessageType.Text) return;
             //Si el usuario no esta dado de alta, rechaza la conexion
             if (message.From.Id != _userID)
-            {
+            {                
                 await _bot.SendTextMessageAsync(
                         message.Chat.Id,
                         "Usuario no autorizado");
+                return;
             }
 
             switch (message.Text.Split(' ').First().ToLower())
@@ -48,10 +49,15 @@ namespace GDaxBot.Telegram
                         message.Chat.Id,
                         "Vender");
                     break;
+                case "alive":
+                    await _bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        "Estoy vivo");
+                    break;
                 default:
                     await _bot.SendTextMessageAsync(
                         message.Chat.Id,
-                        "Default");
+                        "Envia una orden");
                     break;
             }
 
