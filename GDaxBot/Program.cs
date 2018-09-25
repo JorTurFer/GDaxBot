@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GDaxBot.Telegram;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,12 +15,55 @@ namespace GDaxBot
 {
     class Program
     {
-        public static IConfigurationRoot Configuration { get; set; }
-
+        //IOC
+        public static IServiceProvider ServiceProvider { get; private set; }
 
         static void Main(string[] args)
         {
-            
+            //Registro todo el IOC
+            RegisterIOC();
+
+
+            var bot = ServiceProvider.GetService<ITelegramBot>();
+
+            bot.SendMessage("Hola");
+            bot.SendMessage("¿Que tal?");
+
+            Console.ReadKey();
+        }
+
+        static void RegisterServices(IServiceCollection services)
+        {
+            services.AddSingleton<ITelegramBot, TelegramBot>();
+        }
+
+        static void RegisterIOC()
+        {
+            IConfigurationRoot Configuration;
+            var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
+
+            var isDevelopment = string.IsNullOrEmpty(devEnvironmentVariable) ||
+                                devEnvironmentVariable.ToLower() == "development";
+            //Determines the working environment as IHostingEnvironment is unavailable in a console app
+            var builder = new ConfigurationBuilder();
+            // tell the builder to look for the appsettings.json file
+            builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            //only add secrets in development
+            if (isDevelopment)
+            {
+                builder.AddUserSecrets<Program>();
+            }
+
+            Configuration = builder.Build();
+
+            IServiceCollection services = new ServiceCollection();
+
+            //Map the implementations of your classes here ready for DI
+            services.Configure<Settings>(Configuration.GetSection(nameof(Settings))).AddOptions();
+
+            RegisterServices(services);
+            ServiceProvider = services.BuildServiceProvider();
         }
     }
 }

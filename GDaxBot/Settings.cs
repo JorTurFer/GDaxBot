@@ -7,5 +7,6 @@ namespace GDaxBot
     public class Settings
     {
         public string TelegramBotKey { get; set; }
+        public int UserID { get; set; }
     }
 }
