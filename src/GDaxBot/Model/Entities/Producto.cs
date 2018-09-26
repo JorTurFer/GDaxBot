@@ -19,19 +19,23 @@ namespace GDaxBot.Model.Entities
 
         public List<Muestra> UltimosPrecios { get; set; }
 
-        public decimal Porcentaje
+        decimal GetPorcentaje(int minutos)
         {
-            get
-            {
-                if (UltimosPrecios.Count >= 2)
-                {
-                    var ret = (UltimosPrecios[0].Valor - UltimosPrecios[1].Valor) / (decimal)((UltimosPrecios[0].Fecha - UltimosPrecios[1].Fecha).TotalSeconds);
-                    return ret;
-                }
-                else
-                    return 0;
-            }
+            minutos = minutos * 4;
+            var valorAnterior = UltimosPrecios[UltimosPrecios.Count > minutos ? minutos : UltimosPrecios.Count - 1].Valor;
+            var ret = ((UltimosPrecios[0].Valor - valorAnterior) * 100) / valorAnterior;
+            return ret;
         }
+
+        public decimal Minuto { get => GetPorcentaje(1); }
+
+        public decimal Hora { get => GetPorcentaje(60); }
+
+        public decimal MedioDia { get => GetPorcentaje(60 * 12); }
+
+        public decimal Dia { get => GetPorcentaje(60 * 24); }
+
+        public DateTime LastMessage { get; set; } = DateTime.Now;
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GDaxBot.Model.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +7,7 @@ namespace GDaxBot.Model.Services.GDaxBot
 {
     public interface IGDaxBotService
     {
-        void DoWork();
+        void Start();
+        void Stop();
     }
 }

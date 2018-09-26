@@ -24,9 +24,9 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             SendMessage("Iniciando los servicios de monitorizacion");
         }
 
-        public void SendMessage(string Message)
+        public async void SendMessage(string Message)
         {
-            _bot.SendTextMessageAsync(_userID, Message).Wait();
+            await _bot.SendTextMessageAsync(_userID, Message);
         }
 
         private async void _bot_OnMessage(object sender, MessageEventArgs e)

@@ -13,21 +13,44 @@ namespace GDaxBot.Model.Services.GDaxBot
         private readonly ITelegramBot _telegramBot;
         private readonly ICoinbaseService _coinbaseService;
 
+        private bool _seguir = true;
+
         public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService)
         {
             _telegramBot = telegramBot;
             _coinbaseService = coinbaseService;
+            _coinbaseService.AcctionNeeded += _coinbaseService_AcctionNeeded;
         }
 
-        public void DoWork()
+        private void _coinbaseService_AcctionNeeded(Entities.CoinbaseApiEventArgs e)
         {
-            while (true)
-            {
-                Debug.WriteLine("Iniciando ciclo");
-                _coinbaseService.CheckProducts();
+            _telegramBot.SendMessage(e.Frase);
+        }
 
-                Thread.Sleep(5000);
+        public void Start()
+        {
+            _seguir = true;
+            AutoResetEvent Trigger = new AutoResetEvent(true);
+            new Thread(() => 
+            {
+                Thread.CurrentThread.IsBackground = true;
+                while (_seguir)
+                {                    
+                    Thread.Sleep(15000);
+                    Trigger.Set();
+                }
+            }).Start();
+
+            while (_seguir)
+            {
+                if (Trigger.WaitOne(75000))
+                    _coinbaseService.CheckProducts();
             }
+        }
+
+        public void Stop()
+        {
+            _seguir = false;
         }
     }
 }

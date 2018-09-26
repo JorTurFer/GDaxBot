@@ -4,7 +4,7 @@ using GDaxBot.Model.Services.GDaxBot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-
+using System.Threading;
 
 namespace GDaxBot
 {
@@ -16,13 +16,22 @@ namespace GDaxBot
         static void Main(string[] args)
         {
             try
-            {    
+            {
                 //Registro todo el IOC
                 RegisterIOC();
 
                 var service = ServiceProvider.GetService<IGDaxBotService>();
-                service.DoWork();
+                var thread = new Thread(() =>
+                {
+                    Thread.CurrentThread.IsBackground = true;
+                    service.Start();
+                });
+                thread.Start();
+
                 Console.ReadKey();
+
+                service.Stop();
+
             }
             catch (Exception ex)
             {
