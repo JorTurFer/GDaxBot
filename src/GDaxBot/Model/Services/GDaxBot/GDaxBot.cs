@@ -26,7 +26,7 @@ namespace GDaxBot.Model.Services.GDaxBot
                 Debug.WriteLine("Iniciando ciclo");
                 _coinbaseService.CheckProducts();
 
-                Thread.Sleep(5000);
+                Thread.Sleep(2000);
             }
         }
     }

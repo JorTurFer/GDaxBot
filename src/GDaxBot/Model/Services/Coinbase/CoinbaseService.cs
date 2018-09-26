@@ -38,7 +38,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             foreach(var producto in _productos)
             {
                 var res = await _cliente.ProductsService.GetProductTickerAsync(producto.Tipo);
-                producto.UltimosPrecios.Add(res.Price);                
+                producto.UltimosPrecios.Add(res.Price);       
             }
         }
 
