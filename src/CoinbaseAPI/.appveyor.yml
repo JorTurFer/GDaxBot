@@ -1,0 +1,16 @@
+version: '{build}'
+image: Visual Studio 2017
+configuration: Release
+platform: Any CPU
+before_build:
+- ps: >-
+    nuget.exe restore CoinbasePro.sln
+
+    GitVersion.exe /output buildserver
+build:
+  project: CoinbasePro.sln
+  verbosity: normal
+test:
+  assemblies:
+    only:
+    - '**\*.Specs.dll'
