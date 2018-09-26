@@ -36,7 +36,7 @@ namespace GDaxBot.Model.Services.GDaxBot
                 Thread.CurrentThread.IsBackground = true;
                 while (_seguir)
                 {                    
-                    Thread.Sleep(15000);
+                    Thread.Sleep(5000);
                     Trigger.Set();
                 }
             }).Start();

@@ -26,7 +26,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             _cliente = new CoinbaseProClient(authenticator);
 
             //Indico el maximo de muestras a almacenar (esto deberia ir al json)
-            _muestras = 10080 * 4; //7 dias con muestras por minuto
+            _muestras = 10080 * 12; //7 dias con muestras por minuto
             _umbral = 5;
             //Inicio la lista de productos
             List<int> productos = new List<int>();
@@ -89,7 +89,10 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                     producto.UltimosPrecios.RemoveAt(_muestras - 1);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.SetCursorPosition(0, fila);
-                Console.Write($"{producto.Tipo.ToString().Substring(0, 3).ToUpper()}->\t{producto.UltimosPrecios[0].Valor.ToString("0000.00")}");
+                Console.Write($"{producto.Tipo.ToString().Substring(0, 3).ToUpper()} ->");
+                string valor = producto.UltimosPrecios[0].Valor.ToString("0.00");
+                Console.SetCursorPosition(7 + (7- valor.Length), fila);
+                Console.Write($"{valor} EUR");                
                 Console.ForegroundColor = producto.Minuto == 0 ? ConsoleColor.White : producto.Minuto > 0 ? ConsoleColor.Green : ConsoleColor.Red;
                 Console.SetCursorPosition(27, fila);
                 string frase = "";
