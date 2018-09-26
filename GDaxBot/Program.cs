@@ -1,17 +1,9 @@
-﻿using CoinbasePro.Network.Authentication;
-using GDaxBot.Coinbase;
-using GDaxBot.Telegram;
+﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
+using GDaxBot.Coinbase.Model.Services.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Telegram.Bot;
-using Telegram.Bot.Args;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.ReplyMarkups;
+
 
 namespace GDaxBot
 {

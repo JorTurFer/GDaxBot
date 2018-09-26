@@ -25,4 +25,8 @@
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Model\Entities\" />
+  </ItemGroup>
 </Project>
