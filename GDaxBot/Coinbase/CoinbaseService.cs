@@ -28,10 +28,10 @@ namespace GDaxBot.Coinbase
                 Console.WriteLine($"{a.Currency}->{a.Balance}");
             List<int> productos = new List<int>();
             productos.Add(1); //BtcEur
-            productos.Add(4); //EthUsd
-            productos.Add(7); //LtcEur
-            productos.Add(10); //BchEur
-            productos.Add(13); //EtcEur
+            productos.Add(4); //EthEur
+            productos.Add(8); //LtcEur
+            productos.Add(12); //BchEur
+            productos.Add(16); //EtcEur
 
             foreach (var product in productos)
             {
