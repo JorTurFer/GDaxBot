@@ -9,7 +9,7 @@ namespace GDaxBot.Model.Entities
     {
         public Producto()
         {
-            UltimosPrecios = new List<decimal>();
+            UltimosPrecios = new List<Muestra>();
         }
         public ProductType Tipo { get; set; }
 
@@ -17,6 +17,21 @@ namespace GDaxBot.Model.Entities
 
         public decimal PrecioCompra { get; set; }
 
-        public List<decimal> UltimosPrecios { get; set; }
+        public List<Muestra> UltimosPrecios { get; set; }
+
+        public decimal Porcentaje
+        {
+            get
+            {
+                if (UltimosPrecios.Count >= 2)
+                {
+                    var ret = (UltimosPrecios[0].Valor - UltimosPrecios[1].Valor) / (decimal)((UltimosPrecios[0].Fecha - UltimosPrecios[1].Fecha).TotalSeconds);
+                    return ret;
+                }
+                else
+                    return 0;
+            }
+        }
+
     }
 }
