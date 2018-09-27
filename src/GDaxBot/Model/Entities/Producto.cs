@@ -21,7 +21,7 @@ namespace GDaxBot.Model.Entities
 
         decimal GetPorcentaje(int minutos)
         {
-            minutos = minutos * 12;
+            minutos = minutos * 6;
             var valorAnterior = UltimosPrecios[UltimosPrecios.Count > minutos ? minutos : UltimosPrecios.Count - 1].Valor;
             var ret = ((UltimosPrecios[0].Valor - valorAnterior) * 100) / valorAnterior;
             return ret;

@@ -26,8 +26,8 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             _cliente = new CoinbaseProClient(authenticator);
 
             //Indico el maximo de muestras a almacenar (esto deberia ir al json)
-            _muestras = 10080 * 12; //7 dias con muestras por minuto
-            _umbral = 7.5M;
+            _muestras = secrets.Value.MuestrasMinuto * 1440 * secrets.Value.DiasAlmacenados;
+            _umbral = secrets.Value.UmbralDisparo;
             //Inicio la lista de productos
             List<int> productos = new List<int>();
             productos.Add(1); //BtcEur
@@ -82,73 +82,53 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             Console.SetCursorPosition(0, 0);
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($"----------Fecha:{DateTime.Now.ToString("HH:mm:ss")}----------");
-            int fila = 1;
+            int fila = 1;            
             foreach (var producto in _productos)
             {
+                int posicion = 0;
                 if (producto.UltimosPrecios.Count > _muestras)
                     producto.UltimosPrecios.RemoveAt(_muestras - 1);
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(0, fila);
+                Console.SetCursorPosition(posicion, fila);
                 Console.Write($"{producto.Tipo.ToString().Substring(0, 3).ToUpper()} ->");
                 string valor = producto.UltimosPrecios[0].Valor.ToString("0.00");
                 Console.SetCursorPosition(7 + (7- valor.Length), fila);
                 Console.Write($"{valor} EUR");                
                 Console.ForegroundColor = producto.Minuto == 0 ? ConsoleColor.White : producto.Minuto > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                Console.SetCursorPosition(27, fila);
+                posicion += 23;
+                Console.SetCursorPosition(posicion, fila);
                 string frase = "";
                 if (producto.Minuto >= 0)
                     frase += "+";
                 frase += producto.Minuto.ToString("0.0000");
-                Console.Write($"Minuto: {frase}% ");
+                Console.Write($"Minuto:{frase}% ");
                 Console.ForegroundColor = producto.Hora == 0 ? ConsoleColor.White : producto.Hora > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                Console.SetCursorPosition(46, fila);
+                posicion += 18;
+                Console.SetCursorPosition(posicion, fila);
                 frase = "";
                 if (producto.Hora >= 0)
                     frase += "+";
                 frase += producto.Hora.ToString("0.0000");
-                Console.Write($"Hora: { frase}%");
+                Console.Write($"Hora:{ frase}%");
                 Console.ForegroundColor = producto.MedioDia == 0 ? ConsoleColor.White : producto.MedioDia > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                Console.SetCursorPosition(63, fila);
+                posicion += 16;
+                Console.SetCursorPosition(posicion, fila);
                 frase = "";
                 if (producto.MedioDia >= 0)
                     frase += "+";
                 frase += producto.MedioDia.ToString("0.0000");
-                Console.Write($"12 Horas: { frase}%");
+                Console.Write($"12 Horas:{ frase}%");
                 Console.ForegroundColor = producto.Dia == 0 ? ConsoleColor.White : producto.Dia > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                Console.SetCursorPosition(84, fila);
+                posicion += 20;
+                Console.SetCursorPosition(posicion, fila);
                 frase = "";
                 if (producto.Dia >= 0)
                     frase += "+";
                 frase += producto.Dia.ToString("0.0000");
-                Console.WriteLine($"24 Horas: { frase}%");
+                Console.WriteLine($"24 Horas:{ frase}%");
                 fila++;
             }            
 
-        }
-
-        //public 
-
-        //async void test(IOptions<Settings> secrets)
-        //{
-        //    //create an authenticator with your apiKey, apiSecret and passphrase
-
-
-        //    //use one of the services 
-        //    var allAccounts = await coinbaseProClient.AccountsService.GetAllAccountsAsync();
-
-        //    foreach (var a in allAccounts)
-        //        Console.WriteLine($"{a.Currency}->{a.Balance}");
-
-
-
-        //    var res2 = await coinbaseProClient.CurrenciesService.GetAllCurrenciesAsync();
-
-        //    var ase = res2;
-
-        //    var res3 = await coinbaseProClient.ProductsService.GetAllProductsAsync();
-
-        //    var b = res3;
-
-        //}
+        }        
     }
 }

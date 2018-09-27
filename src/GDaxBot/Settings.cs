@@ -12,5 +12,8 @@ namespace GDaxBot
         public string CoinbaseKey { get; set; }
         public string CoinbaseSecret { get; set; }
         public string CoinbasePassword { get; set; }
+        public int DiasAlmacenados { get; set; }
+        public decimal UmbralDisparo { get; set; }
+        public int MuestrasMinuto { get; set; }
     }
 }
