@@ -13,9 +13,7 @@ namespace GDaxBot.Model.Entities
         }
         public ProductType Tipo { get; set; }
 
-        public decimal Cantidad { get; set; }
-
-        public decimal PrecioCompra { get; set; }
+        public decimal Umbral { get; set; }
 
         public List<Muestra> UltimosPrecios { get; set; }
 
@@ -35,7 +33,7 @@ namespace GDaxBot.Model.Entities
 
         public decimal Dia { get => GetPorcentaje(60 * 24); }
 
-        public DateTime LastMessage { get; set; } = DateTime.Now;
+        public DateTime LastMessage { get; set; }
 
     }
 }

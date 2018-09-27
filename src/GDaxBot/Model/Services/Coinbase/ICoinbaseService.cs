@@ -1,7 +1,5 @@
-﻿using GDaxBot.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CoinbasePro.Shared.Types;
+using GDaxBot.Model.Entities;
 
 namespace GDaxBot.Coinbase.Model.Services.Coinbase
 {
@@ -9,5 +7,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     {
         void CheckProducts();
         event CoinbaseApiEventHandler AcctionNeeded;
+        decimal GetUmbral(ProductType tipo);
+        void SetUmbral(ProductType tipo,decimal umbral);
     }
 }
