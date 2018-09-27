@@ -90,6 +90,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
             sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
             sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
+            sb.AppendLine($"Desviación: {producto.Marcador.ToString("0.0000")}%");
             sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
             sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
             sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
@@ -104,6 +105,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
                 sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
                 sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
+                sb.AppendLine($"Desviación: {producto.Marcador.ToString("0.0000")}%");
                 sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
                 sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
                 sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
