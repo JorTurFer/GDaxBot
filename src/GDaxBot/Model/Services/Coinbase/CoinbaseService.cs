@@ -76,7 +76,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                         producto.LastMessage = DateTime.Now;
                     }
                 }
-
             }
             //Generacion de vistas
             Console.SetCursorPosition(0, 0);
@@ -127,8 +126,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 frase += producto.Dia.ToString("0.0000");
                 Console.WriteLine($"24 Horas:{ frase}%");
                 fila++;
-            }            
-
+            }  
         }        
     }
 }
