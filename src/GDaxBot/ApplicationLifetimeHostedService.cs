@@ -49,7 +49,9 @@ namespace GDaxBot
 
         private void OnStopping()
         {
-
+            ServiceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
+            var service = ServiceProvider.GetService<IGDaxBotService>();
+            service.Stop();
         }
 
         private void OnStopped()
@@ -66,14 +68,14 @@ namespace GDaxBot
             return Task.CompletedTask;
         }
 
-        static void RegisterServices(IServiceCollection services)
+        void RegisterServices(IServiceCollection services)
         {
             services.AddSingleton<ITelegramBot, TelegramBot>();
             services.AddSingleton<ICoinbaseService, CoinbaseService>();
             services.AddSingleton<IGDaxBotService, GDaxBotService>();
         }
 
-        static void RegisterIOC()
+        void RegisterIOC()
         {
             IConfigurationRoot Configuration;
             var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");

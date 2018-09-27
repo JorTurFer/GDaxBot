@@ -59,7 +59,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     sb.AppendLine("\t\tUmbral get/set \"Activo\"");
                     sb.AppendLine("\t\tRatio All/\"Activo\"");
                     sb.AppendLine("\t\tMarcador \"Activo\"");
-                    sb.AppendLine("\t\t\"Activos\"");
+                    sb.AppendLine("\t\tActivos");
 
                     await _bot.SendTextMessageAsync(
                         message.Chat.Id,
