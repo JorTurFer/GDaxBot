@@ -27,7 +27,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
             //Indico el maximo de muestras a almacenar (esto deberia ir al json)
             _muestras = 10080 * 12; //7 dias con muestras por minuto
-            _umbral = 5;
+            _umbral = 7.5M;
             //Inicio la lista de productos
             List<int> productos = new List<int>();
             productos.Add(1); //BtcEur
