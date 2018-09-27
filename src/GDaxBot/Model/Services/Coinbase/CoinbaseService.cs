@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace GDaxBot.Coinbase.Model.Services.Coinbase
 {
@@ -35,7 +36,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             //productos.Add(16); //EtcEur
             foreach (var product in productos)
             {
-                _productos.Add(new Producto { Tipo = (ProductType)product, Umbral = secrets.Value.UmbralDisparo });
+                _productos.Add(new Producto { Tipo = (ProductType)product, UmbralUp = secrets.Value.UmbralDisparo, UmbralDown = -secrets.Value.UmbralDisparo });
             }
         }
 
@@ -49,30 +50,12 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
                 if ((DateTime.Now - producto.LastMessage).TotalMinutes > 5)
                 {
-                    if (Math.Abs(producto.Minuto) >= producto.Umbral)
+                    if (producto.Marcador >= producto.UmbralUp || producto.Marcador <= producto.UmbralDown)
                     {
-                        string Frase = $"Revisa {producto.Tipo.ToString().Substring(0, 3).ToUpper()}, ha cambiado un {producto.Minuto.ToString("0.00")}% en el ultimo minuto";
-                        AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { Tipo = producto.Tipo, Cambio = producto.Minuto, Frase = Frase });
+                        string Frase = $"Revisa {producto.Tipo.ToString().Substring(0, 3).ToUpper()}, ha cambiado un {producto.Marcador.ToString("0.00")}% del valor marcado";
+                        AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { Tipo = producto.Tipo, Cambio = producto.Marcador, Frase = Frase });
                         producto.LastMessage = DateTime.Now;
-                    }
-                    if (Math.Abs(producto.Hora) >= producto.Umbral)
-                    {
-                        string Frase = $"Revisa {producto.Tipo.ToString().Substring(0, 3).ToUpper()}, ha cambiado un {producto.Hora.ToString("0.00")}% en la ultima hora";
-                        AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { Tipo = producto.Tipo, Cambio = producto.Hora, Frase = Frase });
-                        producto.LastMessage = DateTime.Now;
-                    }
-                    if (Math.Abs(producto.MedioDia) >= producto.Umbral)
-                    {
-                        string Frase = $"Revisa {producto.Tipo.ToString().Substring(0, 3).ToUpper()}, ha cambiado un {producto.MedioDia.ToString("0.00")}% en las ultimas 12 horas";
-                        AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { Tipo = producto.Tipo, Cambio = producto.MedioDia, Frase = Frase });
-                        producto.LastMessage = DateTime.Now;
-                    }
-                    if (Math.Abs(producto.Dia) >= producto.Umbral)
-                    {
-                        string Frase = $"Revisa {producto.Tipo.ToString().Substring(0, 3).ToUpper()}, ha cambiado un {producto.Dia.ToString("0.00")}% en el ultimo dia";
-                        AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { Tipo = producto.Tipo, Cambio = producto.Dia, Frase = Frase });
-                        producto.LastMessage = DateTime.Now;
-                    }
+                    }                    
                 }
             }
             //Generacion de vistas
@@ -91,16 +74,16 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 string valor = producto.UltimosPrecios[0].Valor.ToString("0.00");
                 Console.SetCursorPosition(7 + (7 - valor.Length), fila);
                 Console.Write($"{valor} EUR");
-                Console.ForegroundColor = producto.Minuto == 0 ? ConsoleColor.White : producto.Minuto > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 23;
+                Console.ForegroundColor = producto.Marcador == 0 ? ConsoleColor.White : producto.Marcador > 0 ? ConsoleColor.Green : ConsoleColor.Red;
+                posicion += 21;
                 Console.SetCursorPosition(posicion, fila);
                 string frase = "";
-                if (producto.Minuto >= 0)
+                if (producto.Marcador >= 0)
                     frase += "+";
-                frase += producto.Minuto.ToString("0.0000");
-                Console.Write($"Minuto:{frase}% ");
+                frase += producto.Marcador.ToString("0.0000");
+                Console.Write($"Marcador:{frase}% ");
                 Console.ForegroundColor = producto.Hora == 0 ? ConsoleColor.White : producto.Hora > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 18;
+                posicion += 20;
                 Console.SetCursorPosition(posicion, fila);
                 frase = "";
                 if (producto.Hora >= 0)
@@ -127,14 +110,63 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             }
         }
 
-        public decimal GetUmbral(ProductType tipo)
+        public decimal GetUmbralUp(ProductType tipo)
         {
-            return _productos.Where(x => x.Tipo == tipo).First().Umbral;
+            return _productos.Where(x => x.Tipo == tipo).First().UmbralUp;
+        }
+
+        public decimal GetUmbralDown(ProductType tipo)
+        {
+            return _productos.Where(x => x.Tipo == tipo).First().UmbralDown;
         }
 
         public void SetUmbral(ProductType tipo, decimal umbral)
         {
-            _productos.Where(x => x.Tipo == tipo).First().Umbral = umbral;
+            if (umbral > 0)
+                _productos.Where(x => x.Tipo == tipo).First().UmbralUp = umbral;
+            else if (umbral < 0)
+                _productos.Where(x => x.Tipo == tipo).First().UmbralDown = umbral;
+            else
+            {
+                _productos.Where(x => x.Tipo == tipo).First().UmbralUp = umbral;
+                _productos.Where(x => x.Tipo == tipo).First().UmbralDown = umbral;
+            }
+        }
+
+        public string GetRatio(ProductType tipo)
+        {
+            StringBuilder sb = new StringBuilder();
+            var producto = _productos.Where(x => x.Tipo == tipo).First();
+            sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
+            sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
+            sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
+            sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
+            sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
+            sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
+            return sb.ToString();
+        }
+
+        public string GetRatio()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var producto in _productos)
+            {
+                sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
+                sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
+                sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
+                sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
+                sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
+                sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        public decimal SetMarcador(ProductType tipo)
+        {
+            var producto = _productos.Where(x => x.Tipo == tipo).First();
+            producto.ValorMarcado = producto.UltimosPrecios[0].Valor;
+            return producto.UltimosPrecios[0].Valor;
         }
     }
 }

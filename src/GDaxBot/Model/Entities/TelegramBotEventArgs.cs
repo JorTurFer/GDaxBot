@@ -9,6 +9,7 @@ namespace GDaxBot.Model.Entities
     {
         UmbralGet,
         UmbralSet,
+        MarcadorSetTipo,
         RatioAll,
         RatioTipo
     }

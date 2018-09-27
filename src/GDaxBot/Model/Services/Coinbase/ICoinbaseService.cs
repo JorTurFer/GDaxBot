@@ -7,7 +7,11 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     {
         void CheckProducts();
         event CoinbaseApiEventHandler AcctionNeeded;
-        decimal GetUmbral(ProductType tipo);
+        decimal GetUmbralUp(ProductType tipo);
+        decimal GetUmbralDown(ProductType tipo);
         void SetUmbral(ProductType tipo,decimal umbral);
+        string GetRatio(ProductType tipo);
+        string GetRatio();
+        decimal SetMarcador(ProductType tipo);
     }
 }

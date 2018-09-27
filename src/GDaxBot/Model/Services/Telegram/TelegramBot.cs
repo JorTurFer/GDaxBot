@@ -57,6 +57,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     sb = new StringBuilder();
                     sb.AppendLine("Lista de Comandos:");
                     sb.AppendLine("\t\tUmbral get/set \"Activo\"");
+                    sb.AppendLine("\t\tRatio All/\"Activo\"");
 
                     await _bot.SendTextMessageAsync(
                         message.Chat.Id,
@@ -67,6 +68,9 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     break;
                 case "ratio":
                     RatioCommand(entrada, message);
+                    break;
+                case "marcador":
+                    MarcadorCommand(entrada, message);
                     break;
                 case "alive":
                     await _bot.SendTextMessageAsync(
@@ -174,6 +178,35 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                            "Envia una orden válida, si tienes dudas, envia \"Ratio -help\" para pedir ayuda");
                 }
             }
+        }
+        private async void MarcadorCommand(string[] entrada, Message message)
+        {
+            if (entrada.Length == 1 || entrada[1] == "-help")
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Lista de Subcomandos \"Marcador\":");
+                sb.AppendLine("\tMarcador \"Activo\"->Indica el calor sobre el que operan los porcentajes personalizados");
+                await _bot.SendTextMessageAsync(
+                message.Chat.Id,
+                sb.ToString());
+                return;
+            }
+            try
+            {
+                if (Enum.TryParse(typeof(ProductType), entrada[1].FirstLetterCapital() + "Eur", out object tipo))
+                {
+                    AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.MarcadorSetTipo, Tipo = (ProductType)tipo });
+                }
+                else
+                    throw new ArgumentException();
+            }
+            catch
+            {
+                await _bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       "Envia una orden válida, si tienes dudas, envia \"Marcador -help\" para pedir ayuda");
+            }
+
         }
     }
 }

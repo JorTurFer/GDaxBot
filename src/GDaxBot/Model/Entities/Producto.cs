@@ -13,7 +13,10 @@ namespace GDaxBot.Model.Entities
         }
         public ProductType Tipo { get; set; }
 
-        public decimal Umbral { get; set; }
+        public decimal UmbralUp { get; set; }
+        public decimal UmbralDown { get; set; }
+
+        public decimal ValorMarcado { get; set; } = 0;
 
         public List<Muestra> UltimosPrecios { get; set; }
 
@@ -24,8 +27,15 @@ namespace GDaxBot.Model.Entities
             var ret = ((UltimosPrecios[0].Valor - valorAnterior) * 100) / valorAnterior;
             return ret;
         }
+        decimal GetPorcentajeMarcador()
+        {
+            if (ValorMarcado == 0)
+                ValorMarcado = UltimosPrecios[0].Valor;
+            var ret = ((UltimosPrecios[0].Valor - ValorMarcado) * 100) / ValorMarcado;
+            return ret;
+        }
 
-        public decimal Minuto { get => GetPorcentaje(1); }
+        public decimal Marcador { get => GetPorcentajeMarcador(); }
 
         public decimal Hora { get => GetPorcentaje(60); }
 
