@@ -57,57 +57,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                         producto.LastMessage = DateTime.Now;
                     }                    
                 }
-            }
-            //Generacion de vistas
-            Console.SetCursorPosition(0, 0);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine($"----------Fecha:{DateTime.Now.ToString("HH:mm:ss")}----------");
-            int fila = 1;
-            foreach (var producto in _productos)
-            {
-                int posicion = 0;
-                if (producto.UltimosPrecios.Count > _muestras)
-                    producto.UltimosPrecios.RemoveAt(_muestras - 1);
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(posicion, fila);
-                Console.Write($"{producto.Tipo.ToString().Substring(0, 3).ToUpper()} ->");
-                string valor = producto.UltimosPrecios[0].Valor.ToString("0.00");
-                Console.SetCursorPosition(7 + (7 - valor.Length), fila);
-                Console.Write($"{valor} EUR");
-                Console.ForegroundColor = producto.Marcador == 0 ? ConsoleColor.White : producto.Marcador > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 21;
-                Console.SetCursorPosition(posicion, fila);
-                string frase = "";
-                if (producto.Marcador >= 0)
-                    frase += "+";
-                frase += producto.Marcador.ToString("0.0000");
-                Console.Write($"Marcador:{frase}% ");
-                Console.ForegroundColor = producto.Hora == 0 ? ConsoleColor.White : producto.Hora > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 20;
-                Console.SetCursorPosition(posicion, fila);
-                frase = "";
-                if (producto.Hora >= 0)
-                    frase += "+";
-                frase += producto.Hora.ToString("0.0000");
-                Console.Write($"Hora:{ frase}%");
-                Console.ForegroundColor = producto.MedioDia == 0 ? ConsoleColor.White : producto.MedioDia > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 16;
-                Console.SetCursorPosition(posicion, fila);
-                frase = "";
-                if (producto.MedioDia >= 0)
-                    frase += "+";
-                frase += producto.MedioDia.ToString("0.0000");
-                Console.Write($"12 Horas:{ frase}%");
-                Console.ForegroundColor = producto.Dia == 0 ? ConsoleColor.White : producto.Dia > 0 ? ConsoleColor.Green : ConsoleColor.Red;
-                posicion += 20;
-                Console.SetCursorPosition(posicion, fila);
-                frase = "";
-                if (producto.Dia >= 0)
-                    frase += "+";
-                frase += producto.Dia.ToString("0.0000");
-                Console.WriteLine($"24 Horas:{ frase}%");
-                fila++;
-            }
+            }               
         }
 
         public decimal GetUmbralUp(ProductType tipo)

@@ -3,79 +3,37 @@ using GDaxBot.Coinbase.Model.Services.Telegram;
 using GDaxBot.Model.Services.GDaxBot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace GDaxBot
 {
     class Program
     {
-        //IOC
-        public static IServiceProvider ServiceProvider { get; private set; }
-
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            try
-            {
-                //Limpio la consola por si acaso
-                Console.Clear();
-                //Registro todo el IOC
-                RegisterIOC();
-
-                var service = ServiceProvider.GetService<IGDaxBotService>();
-                var thread = new Thread(() =>
+            IHost host = new HostBuilder()
+                 .ConfigureHostConfiguration(configHost =>
+                 {
+                     configHost.SetBasePath(Directory.GetCurrentDirectory());
+                 })
+                 .ConfigureAppConfiguration((hostContext, configApp) =>
+                 {
+                     configApp.SetBasePath(Directory.GetCurrentDirectory());
+                     configApp.AddJsonFile($"appsettings.json", true);
+                     configApp.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", true);
+                 })
+                .ConfigureServices((hostContext, services) =>
                 {
-                    Thread.CurrentThread.IsBackground = true;
-                    service.Start();
-                });
-                thread.Start();
+                    services.AddLogging();
+                    services.AddHostedService<ApplicationLifetimeHostedService>();
+                })                
+                .Build();
 
-                Console.ReadKey();
-
-                service.Stop();
-
-            }
-            catch (Exception ex)
-            {
-                //Envio aviso de que hay un error
-                ServiceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio.\nRazon->{ex.Message}");
-            }
-        }
-
-        static void RegisterServices(IServiceCollection services)
-        {
-            services.AddSingleton<ITelegramBot, TelegramBot>();
-            services.AddSingleton<ICoinbaseService, CoinbaseService>();
-            services.AddSingleton<IGDaxBotService, GDaxBotService>();
-        }
-
-        static void RegisterIOC()
-        {
-            IConfigurationRoot Configuration;
-            var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
-
-            var isDevelopment = string.IsNullOrEmpty(devEnvironmentVariable) ||
-                                devEnvironmentVariable.ToLower() == "development";
-            //Determines the working environment as IHostingEnvironment is unavailable in a console app
-            var builder = new ConfigurationBuilder();
-            // tell the builder to look for the appsettings.json file
-            builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            //only add secrets in development
-            if (isDevelopment)
-            {
-                builder.AddUserSecrets<Program>();
-            }
-
-            Configuration = builder.Build();
-
-            IServiceCollection services = new ServiceCollection();
-
-            //Map the implementations of your classes here ready for DI
-            services.Configure<Settings>(Configuration.GetSection(nameof(Settings))).AddOptions();
-
-            RegisterServices(services);
-            ServiceProvider = services.BuildServiceProvider();
+            await host.RunAsync();
         }
     }
 }

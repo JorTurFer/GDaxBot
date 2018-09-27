@@ -76,8 +76,6 @@ namespace GDaxBot.Model.Services.GDaxBot
 
         public void Start()
         {
-            Console.WindowWidth = 100;
-            Console.WindowHeight = 6;
             _seguir = true;
             AutoResetEvent Trigger = new AutoResetEvent(true);
             new Thread(() =>
