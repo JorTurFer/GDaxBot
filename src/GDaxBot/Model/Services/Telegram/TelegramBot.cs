@@ -152,36 +152,17 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 sb.ToString());
                 return;
             }
-            if (entrada[1] == "get")
+            if (entrada[1] == "all")
             {
-                try
-                {
-                    if (Enum.TryParse(typeof(ProductType), entrada[2].FirstLetterCapital() + "Eur", out object tipo))
-                    {
-                        AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.UmbralGet, Tipo = (ProductType)tipo });
-                    }
-                    else
-                        throw new ArgumentException();
-                }
-                catch
-                {
-                    await _bot.SendTextMessageAsync(
-                           message.Chat.Id,
-                           "Envia una orden válida, si tienes dudas, envia \"-help\" para pedir ayuda");
-                }
+                AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.RatioAll });
             }
-            else if (entrada[1] == "set")
+            else
             {
                 try
                 {
-                    if (Enum.TryParse(typeof(ProductType), entrada[2].FirstLetterCapital() + "Eur", out object tipo))
+                    if (Enum.TryParse(typeof(ProductType), entrada[1].FirstLetterCapital() + "Eur", out object tipo))
                     {
-                        if (decimal.TryParse(entrada[3], out decimal valor))
-                        {
-                            AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.UmbralSet, Tipo = (ProductType)tipo, Valor = valor });
-                        }
-                        else
-                            throw new ArgumentException();
+                        AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.RatioTipo, Tipo = (ProductType)tipo });
                     }
                     else
                         throw new ArgumentException();
@@ -190,7 +171,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 {
                     await _bot.SendTextMessageAsync(
                            message.Chat.Id,
-                           "Envia una orden válida, si tienes dudas, envia \"-help\" para pedir ayuda");
+                           "Envia una orden válida, si tienes dudas, envia \"Ratio -help\" para pedir ayuda");
                 }
             }
         }
