@@ -17,6 +17,8 @@ namespace GDaxBot
         {
             try
             {
+                //Limpio la consola por si acaso
+                Console.Clear();
                 //Registro todo el IOC
                 RegisterIOC();
 
