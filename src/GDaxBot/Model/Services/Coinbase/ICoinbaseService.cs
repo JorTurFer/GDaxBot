@@ -1,5 +1,6 @@
 ﻿using CoinbasePro.Shared.Types;
 using GDaxBot.Model.Entities;
+using System.Collections.Generic;
 
 namespace GDaxBot.Coinbase.Model.Services.Coinbase
 {
@@ -13,5 +14,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         string GetRatio(ProductType tipo);
         string GetRatio();
         decimal SetMarcador(ProductType tipo);
+
+        IEnumerable<ProductType> GetActivosDisponibles();
     }
 }

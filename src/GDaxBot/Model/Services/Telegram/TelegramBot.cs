@@ -59,7 +59,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     sb.AppendLine("\t\tUmbral get/set \"Activo\"");
                     sb.AppendLine("\t\tRatio All/\"Activo\"");
                     sb.AppendLine("\t\tMarcador \"Activo\"");
-                    sb.AppendLine("\t\t\"Activos\" (pendiente)");
+                    sb.AppendLine("\t\t\"Activos\"");
 
                     await _bot.SendTextMessageAsync(
                         message.Chat.Id,
@@ -73,7 +73,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     break;
                 case "marcador":
                     MarcadorCommand(entrada, message);
-                    break;                
+                    break;
+                case "activos":
+                    AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.ActivosDisponibles});
+                    break;
                 default:
                     await _bot.SendTextMessageAsync(
                                    message.Chat.Id,
@@ -204,6 +207,6 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                        "Envia una orden válida, si tienes dudas, envia \"Marcador -help\" para pedir ayuda");
             }
 
-        }
+        }        
     }
 }

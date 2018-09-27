@@ -118,5 +118,11 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             producto.ValorMarcado = producto.UltimosPrecios[0].Valor;
             return producto.UltimosPrecios[0].Valor;
         }
+
+        public IEnumerable<ProductType> GetActivosDisponibles()
+        {
+            foreach (var producto in _productos)
+                yield return producto.Tipo;
+        }
     }
 }

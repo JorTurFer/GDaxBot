@@ -66,6 +66,16 @@ namespace GDaxBot.Model.Services.GDaxBot
                         _telegramBot.SendMessage(message);
                     }
                     break;
+                case TelegramCommands.ActivosDisponibles:
+                    {
+                        var activos = _coinbaseService.GetActivosDisponibles();
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine("===Activos Disponibles===");
+                        foreach (var activo in activos)
+                            sb.AppendLine(activo.ToString().Substring(0, 3).ToUpper());
+                        _telegramBot.SendMessage(sb.ToString());
+                    }
+                    break;
             }
         }
 

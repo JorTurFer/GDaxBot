@@ -11,7 +11,8 @@ namespace GDaxBot.Model.Entities
         UmbralSet,
         MarcadorSetTipo,
         RatioAll,
-        RatioTipo
+        RatioTipo,
+        ActivosDisponibles
     }
 
     public class TelegramBotEventArgs : EventArgs
