@@ -333,15 +333,15 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                                     .First().ValorMarcado;
             var desviacion = ((ultimoRegistro.Valor - valorMarcado) * 100) / valorMarcado;
 
-            var registrosHora = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
+            var registrosHora = context.Registros.Where(x =>x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
             var valorHora = registrosHora.Count() > 0 ? registrosHora.Average(x => x.Valor) : -1;
             var desviacionHora = GetPorcentaje(ultimoRegistro.Valor, valorHora);
 
-            var registros12Horas = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-720.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-719.8));
+            var registros12Horas = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-720.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-719.8));
             var valor12Horas = registros12Horas.Count() > 0 ? registros12Horas.Average(x => x.Valor) : -1;
             var desviacion12Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
 
-            var registros24Horas = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-1440.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-1439.8));
+            var registros24Horas = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-1440.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-1439.8));
             var valor24Horas = registros24Horas.Count() > 0 ? registros24Horas.Average(x => x.Valor) : -1;
             var desviacion24Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
 
