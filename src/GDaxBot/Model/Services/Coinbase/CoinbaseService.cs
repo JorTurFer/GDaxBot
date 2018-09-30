@@ -57,30 +57,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             await context.SaveChangesAsync();
         }
 
-        public decimal GetUmbralUp(ProductType tipo)
-        {
-            return 0;
-            //return _productos.Where(x => x.Tipo == tipo).First().UmbralUp;
-        }
-
-        public decimal GetUmbralDown(ProductType tipo)
-        {
-            return 0;
-            //return _productos.Where(x => x.Tipo == tipo).First().UmbralDown;
-        }
-
-        public void SetUmbral(ProductType tipo, decimal umbral)
-        {
-            //if (umbral > 0)
-            //    _productos.Where(x => x.Tipo == tipo).First().UmbralUp = umbral;
-            //else if (umbral < 0)
-            //    _productos.Where(x => x.Tipo == tipo).First().UmbralDown = umbral;
-            //else
-            //{
-            //    _productos.Where(x => x.Tipo == tipo).First().UmbralUp = umbral;
-            //    _productos.Where(x => x.Tipo == tipo).First().UmbralDown = umbral;
-            //}
-        }
 
         public string GetRatio(ProductType tipo)
         {
@@ -111,20 +87,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             //    sb.AppendLine();
             //}
             return sb.ToString();
-        }
-
-        public decimal SetMarcador(ProductType tipo)
-        {
-            //var producto = _productos.Where(x => x.Tipo == tipo).First();
-            //producto.ValorMarcado = producto.UltimosPrecios[0].Valor;
-            //return producto.UltimosPrecios[0].Valor;
-            return 0;
-        }
-
-        public IEnumerable<ProductType> GetActivosDisponibles()
-        {
-            foreach (var producto in context.Productos)
-                yield return (ProductType)producto.IdProducto;
         }
     }
 }

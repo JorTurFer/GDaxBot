@@ -210,25 +210,11 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             }
             if (entrada[1] == "all")
             {
-                AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.RatioAll });
+               
             }
             else
             {
-                try
-                {
-                    if (Enum.TryParse(typeof(ProductType), entrada[1].FirstLetterCapital() + "Eur", out object tipo))
-                    {
-                        AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.RatioTipo, Tipo = (ProductType)tipo });
-                    }
-                    else
-                        throw new ArgumentException();
-                }
-                catch
-                {
-                    await _bot.SendTextMessageAsync(
-                           message.Chat.Id,
-                           "Envia una orden válida, si tienes dudas, envia \"Ratio -help\" para pedir ayuda");
-                }
+                
             }
         }
         private async void MarcadorCommand(string[] entrada, Message message)
@@ -245,12 +231,15 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             }
             try
             {
-                if (Enum.TryParse(typeof(ProductType), entrada[1].FirstLetterCapital() + "Eur", out object tipo))
-                {
-                    AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.MarcadorSetTipo, Tipo = (ProductType)tipo });
-                }
-                else
-                    throw new ArgumentException();
+                var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
+                                                           && x.Producto.Nombre.ToLower() == entrada[1]).Include(x => x.Producto).FirstAsync();
+                ajustes.ValorMarcado = context.Registros.Where(x => x.IdProducto == ajustes.IdProducto).OrderByDescending(x => x.Fecha).First().Valor;
+
+                await context.SaveChangesAsync();
+
+                await _bot.SendTextMessageAsync(
+                          message.Chat.Id,
+                          $"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
             }
             catch
             {
