@@ -16,7 +16,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     {
         private readonly CoinbaseProClient _cliente;
         GDaxBotDbContext context;
-        private readonly int _muestras;
 
         public CoinbaseService(IConfiguration config, GDaxBotDbContext context)
         {
@@ -25,11 +24,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             //create the CoinbasePro client
             _cliente = new CoinbaseProClient(authenticator);
 
-            //Indico el maximo de muestras a almacenar (esto deberia ir al json)
-            _muestras = config.GetValue<int>("Settings:MuestrasMinuto") * 1440 * config.GetValue<int>("Settings:DiasAlmacenados");
-            //Inicio la lista de productos
             this.context = context;
-
         }
 
         public async void CheckProducts()
