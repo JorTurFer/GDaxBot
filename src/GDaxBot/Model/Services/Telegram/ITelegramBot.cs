@@ -7,7 +7,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
 {
     public interface ITelegramBot
     {
-        void SendMessage(string Message);
+        void SendMessage(long idTelegram,string Message);
         event TelegramBotEventHandler AcctionNeeded;
     }
 }

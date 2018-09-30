@@ -1,7 +1,9 @@
 ﻿using CoinbasePro.Shared.Types;
 using GDaxBot.Coinbase;
+using GDaxBot.Data;
 using GDaxBot.Extensions;
 using GDaxBot.Model.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -18,23 +20,25 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
     class TelegramBot : ITelegramBot
     {
         private readonly TelegramBotClient _bot;
-        private readonly int _userID;
-
+        private GDaxBotDbContext context;
+        private readonly string botPassword;
         // I’ve injected <em>secrets</em> into the constructor as setup in Program.cs
-        public TelegramBot(IConfiguration config)
+        public TelegramBot(IConfiguration config, GDaxBotDbContext context)
         {
-            _userID = config.GetValue<int>("Settings:UserID");
+            this.context = context;
+            botPassword = config.GetValue<string>("Settings:TelegramBotPassword");
             _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
             _bot.OnMessage += _bot_OnMessage;
             _bot.StartReceiving();
-            SendMessage("Iniciando los servicios de monitorizacion");
+            foreach (var sesion in context.Sesiones)
+                SendMessage(sesion.IdTelegram, "Iniciando los servicios de monitorizacion");
         }
 
         public event TelegramBotEventHandler AcctionNeeded;
 
-        public async void SendMessage(string Message)
+        public async void SendMessage(long ChatID, string Message)
         {
-            await _bot.SendTextMessageAsync(_userID, Message);
+            await _bot.SendTextMessageAsync(ChatID, Message);
         }
 
         private async void _bot_OnMessage(object sender, MessageEventArgs e)
@@ -43,17 +47,50 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
 
             if (message == null || message.Type != MessageType.Text) return;
             //Si el usuario no esta dado de alta, rechaza la conexion
-            if (message.From.Id != _userID)
+            if (context.Sesiones.Where(x => x.IdTelegram == message.Chat.Id).Count() == 0)
             {
                 await _bot.SendTextMessageAsync(
                         message.Chat.Id,
-                        "Usuario no autorizado");
+                        "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
                 return;
             }
             var entrada = message.Text.ToLower().Split(' ');
             StringBuilder sb;
             switch (entrada.First())
             {
+                case "-user":
+                    if (entrada[2] == botPassword)
+                    {
+                        Sesion session = new Sesion();
+                        Usuario usuario = await context.Usuarios.Where(x => x.Nombre == entrada[1]).FirstOrDefaultAsync();
+                        if (usuario == null) //Si no existe, creo el usuario y los ajustes
+                        {
+                            usuario = new Usuario();
+                            usuario.Nombre = entrada[1];
+                            context.Add(usuario);
+                            foreach (var producto in context.Productos)
+                            {
+                                AjustesProducto ajuste = new AjustesProducto();
+                                ajuste.IdProducto = producto.IdProducto;
+                                ajuste.IdUsuario = usuario.IdUsuario;
+                                ajuste.UmbralInferior = -5;
+                                ajuste.UmbralSuperior = 5;
+                                ajuste.ValorMarcado = producto.Registros.Last().Valor;
+                                context.Add(ajuste);
+                            }
+                        }
+                        session.IdTelegram = message.Chat.Id;
+                        session.IdUsuario = usuario.IdUsuario;
+                        context.Add(session);
+                        await context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        await _bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        "Contraseña incorrecta");
+                    }
+                    break;
                 case "-help":
                     sb = new StringBuilder();
                     sb.AppendLine("Lista de Comandos:");
@@ -76,7 +113,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     MarcadorCommand(entrada, message);
                     break;
                 case "activos":
-                    AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.ActivosDisponibles});
+                    AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.ActivosDisponibles });
                     break;
                 default:
                     await _bot.SendTextMessageAsync(
@@ -208,6 +245,6 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                        "Envia una orden válida, si tienes dudas, envia \"Marcador -help\" para pedir ayuda");
             }
 
-        }        
+        }
     }
 }

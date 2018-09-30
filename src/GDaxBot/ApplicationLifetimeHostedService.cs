@@ -50,9 +50,9 @@ namespace GDaxBot
 
         private void OnStopping()
         {
-            serviceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
-            var service = serviceProvider.GetService<IGDaxBotService>();
-            service.Stop();
+            //serviceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
+            //var service = serviceProvider.GetService<IGDaxBotService>();
+            //service.Stop();
         }
 
         private void OnStopped()
@@ -63,9 +63,9 @@ namespace GDaxBot
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            var service = serviceProvider.GetService<IGDaxBotService>();
-            service.Stop();
-            serviceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio");
+            //var service = serviceProvider.GetService<IGDaxBotService>();
+            //service.Stop();
+            //serviceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio");
             return Task.CompletedTask;
         }
     }

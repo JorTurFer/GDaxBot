@@ -12,7 +12,7 @@ namespace GDaxBot.Data
 
         public int IdUsuario { get; set; }
 
-        public int IdTelegram { get; set; }
+        public long IdTelegram { get; set; }
 
         //EFC
         public virtual Usuario Usuario { get; set; }
