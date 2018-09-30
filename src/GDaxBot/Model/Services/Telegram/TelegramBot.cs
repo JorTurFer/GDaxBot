@@ -149,7 +149,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 try
                 {
                     var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
-                                                            && x.Producto.Nombre.ToLower() == entrada[2]).Include(x=>x.Producto).FirstAsync();
+                                                            && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
 
                     await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -166,17 +166,23 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 try
                 {
-                    if (Enum.TryParse(typeof(ProductType), entrada[2].FirstLetterCapital() + "Eur", out object tipo))
+                    if (decimal.TryParse(entrada[3], out decimal valor))
                     {
-                        if (decimal.TryParse(entrada[3], out decimal valor))
-                        {
-                            AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.UmbralSet, Tipo = (ProductType)tipo, Valor = valor });
-                        }
+                        var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
+                                                            && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
+                        if (valor > 0)
+                            ajustes.UmbralSuperior = valor;
                         else
-                            throw new ArgumentException();
+                            ajustes.UmbralInferior = valor;
+                        await context.SaveChangesAsync();
+
+                        await _bot.SendTextMessageAsync(
+                           message.Chat.Id,
+                           $"Los nuevos umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
                     }
                     else
                         throw new ArgumentException();
+
                 }
                 catch
                 {
