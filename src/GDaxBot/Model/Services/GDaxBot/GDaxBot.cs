@@ -1,6 +1,7 @@
 ﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
 using GDaxBot.Coinbase.Model.Services.Telegram;
 using GDaxBot.Model.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -20,9 +21,9 @@ namespace GDaxBot.Model.Services.GDaxBot
 
         private AutoResetEvent _eventoCierre = new AutoResetEvent(false);
 
-        public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService, IOptions<Settings> secrets)
+        public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService, IConfiguration config)
         {
-            _muestrasMinuto = secrets.Value.MuestrasMinuto;
+            _muestrasMinuto = config.GetValue<int>("Settings:MuestrasMinuto"); 
             _telegramBot = telegramBot;
             _telegramBot.AcctionNeeded += _telegramBot_AcctionNeeded;
             _coinbaseService = coinbaseService;

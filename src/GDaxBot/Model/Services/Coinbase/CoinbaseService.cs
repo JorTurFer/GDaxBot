@@ -2,6 +2,7 @@
 using CoinbasePro.Network.Authentication;
 using CoinbasePro.Shared.Types;
 using GDaxBot.Model.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -18,15 +19,15 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public event CoinbaseApiEventHandler AcctionNeeded;
 
-        public CoinbaseService(IOptions<Settings> secrets)
+        public CoinbaseService(IConfiguration config)
         {
-            var authenticator = new Authenticator(secrets.Value.CoinbaseKey, secrets.Value.CoinbaseSecret, secrets.Value.CoinbasePassword);
+            var authenticator = new Authenticator(config.GetValue<string>("Settings:CoinbaseKey"), config.GetValue<string>("Settings:CoinbaseSecret"), config.GetValue<string>("Settings:CoinbasePassword"));
 
             //create the CoinbasePro client
             _cliente = new CoinbaseProClient(authenticator);
 
             //Indico el maximo de muestras a almacenar (esto deberia ir al json)
-            _muestras = secrets.Value.MuestrasMinuto * 1440 * secrets.Value.DiasAlmacenados;
+            _muestras = config.GetValue<int>("Settings:MuestrasMinuto") * 1440 * config.GetValue<int>("Settings:DiasAlmacenados");
             //Inicio la lista de productos
             List<int> productos = new List<int>();
             productos.Add(1); //BtcEur
@@ -36,7 +37,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             //productos.Add(16); //EtcEur
             foreach (var product in productos)
             {
-                _productos.Add(new Producto { Tipo = (ProductType)product, UmbralUp = secrets.Value.UmbralDisparo, UmbralDown = -secrets.Value.UmbralDisparo });
+                _productos.Add(new Producto { Tipo = (ProductType)product, UmbralUp = config.GetValue<int>("Settings:UmbralDisparo"), UmbralDown = -config.GetValue<int>("Settings:UmbralDisparo") });
             }
         }
 
