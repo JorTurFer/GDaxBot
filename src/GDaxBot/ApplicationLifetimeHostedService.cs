@@ -16,7 +16,7 @@ namespace GDaxBot
 {
     public class ApplicationLifetimeHostedService : IHostedService
     {
-        IServiceProvider ServiceProvider;
+        IServiceProvider serviceProvider;
 
         IApplicationLifetime appLifetime;
         ILogger<ApplicationLifetimeHostedService> logger;
@@ -33,14 +33,12 @@ namespace GDaxBot
             this.logger = logger;
             this.appLifetime = appLifetime;
             this.environment = environment;
-            this.ServiceProvider = serviceProvider;
+            this.serviceProvider = serviceProvider;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
-        {
-            //RegisterIOC();
-
-            var service = ServiceProvider.GetService<IGDaxBotService>();
+        {          
+            var service = serviceProvider.GetService<IGDaxBotService>();
 
             service.Start();
             return Task.CompletedTask;
@@ -53,8 +51,8 @@ namespace GDaxBot
 
         private void OnStopping()
         {
-            ServiceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
-            var service = ServiceProvider.GetService<IGDaxBotService>();
+            serviceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
+            var service = serviceProvider.GetService<IGDaxBotService>();
             service.Stop();
         }
 
@@ -66,51 +64,10 @@ namespace GDaxBot
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            var service = ServiceProvider.GetService<IGDaxBotService>();
+            var service = serviceProvider.GetService<IGDaxBotService>();
             service.Stop();
-            ServiceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio");
+            serviceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio");
             return Task.CompletedTask;
-        }
-
-        void RegisterServices(IServiceCollection services, IConfigurationRoot Configuration)
-        {
-
-            //services.AddDbContext<GDaxBotDbContext>(options =>
-            //   options.UseMySql(Configuration.GetConnectionString("GDaxBot")));
-
-
-            //services.AddSingleton<ITelegramBot, TelegramBot>();
-            //services.AddSingleton<ICoinbaseService, CoinbaseService>();
-            //services.AddSingleton<IGDaxBotService, GDaxBotService>();
-        }
-
-        void RegisterIOC()
-        {
-            //IConfigurationRoot Configuration;
-            //var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
-
-            //var isDevelopment = string.IsNullOrEmpty(devEnvironmentVariable) ||
-            //                    devEnvironmentVariable.ToLower() == "development";
-            ////Determines the working environment as IHostingEnvironment is unavailable in a console app
-            //var builder = new ConfigurationBuilder();
-            //// tell the builder to look for the appsettings.json file
-            //builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            ////only add secrets in development
-            //if (isDevelopment)
-            //{
-            //    builder.AddUserSecrets<Program>();
-            //}
-
-            //Configuration = builder.Build();
-
-            //IServiceCollection services = new ServiceCollection();
-
-            ////Map the implementations of your classes here ready for DI
-            //services.Configure<Settings>(Configuration.GetSection(nameof(Settings))).AddOptions();
-
-            //RegisterServices(services,Configuration);
-            //ServiceProvider = services.BuildServiceProvider();
         }
     }
 }
