@@ -10,13 +10,16 @@ namespace GDaxBot.Data
         public Producto ()
         {
             Registros = new HashSet<Registro>();
+            AjustesProductos = new HashSet<AjustesProducto>();
         }
         [Key]
         public int IdProducto { get; set; }
 
         public string Nombre { get; set; }
+        public string Codigo { get; set; }
 
         //EFC
-        public IEnumerable<Registro> Registros { get; set; }
+        public virtual IEnumerable<Registro> Registros { get; set; }
+        public virtual IEnumerable<AjustesProducto> AjustesProductos { get; set; }
     }
 }

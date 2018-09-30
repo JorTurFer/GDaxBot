@@ -10,6 +10,7 @@ namespace GDaxBot.Data
         public Usuario()
         {
             Sesiones = new HashSet<Sesion>();
+            AjustesProductos = new HashSet<AjustesProducto>();
         }
 
         [Key]
@@ -17,8 +18,10 @@ namespace GDaxBot.Data
 
         public string Nombre { get; set; }
 
+        public DateTime LastMessage { get; set; }
 
         //EFC
         public virtual IEnumerable<Sesion> Sesiones { get; set; }
+        public virtual IEnumerable<AjustesProducto> AjustesProductos { get; set; }
     }
 }
