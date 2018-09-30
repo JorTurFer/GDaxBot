@@ -61,7 +61,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public async void CheckAlerts()
         {
-            var productos = await context.Registros.OrderBy(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
+            var productos = await context.Registros.OrderByDescending(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
             foreach (var usuario in context.Usuarios.Where(x=>x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x=>x.AjustesProductos).Include(x=>x.Sesiones))
             {
                 StringBuilder sb = new StringBuilder();
