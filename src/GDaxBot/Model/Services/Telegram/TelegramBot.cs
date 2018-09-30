@@ -44,12 +44,12 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             var logged = true;
             var message = e.Message;
 
-            if (message == null || message.Type != MessageType.Text) return;                      
-                      
+            if (message == null || message.Type != MessageType.Text) return;
+
             var entrada = message.Text.ToLower().Split(' ');
 
             //Lanzo el comando registrar en caso de ser el que se envia
-            if(entrada.First() == "-user")
+            if (entrada.First() == "-user")
             {
                 if (entrada[2] == botPassword)
                 {
@@ -88,7 +88,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     message.Chat.Id,
                     "Contraseña incorrecta");
                     return;
-                }                
+                }
             }
 
             if (!context.Sesiones.Any(x => x.IdTelegram == message.Chat.Id))
@@ -104,7 +104,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 case "-help":
                     sb = new StringBuilder();
                     sb.AppendLine("Lista de Comandos:");
-                    sb.AppendLine("\t\tUmbral get/set \"Activo\"");
+                    sb.AppendLine("\t\tUmbral get/set All/\"Activo\"");
                     sb.AppendLine("\t\tRatio All/\"Activo\"");
                     sb.AppendLine("\t\tMarcador \"Activo\"");
                     sb.AppendLine("\t\tActivos");
@@ -165,12 +165,24 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 try
                 {
-                    var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
-                                                            && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
-
+                    StringBuilder sb = new StringBuilder();
+                    if (entrada[2] == "all")
+                    {
+                        foreach (var ajustes in context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
+                                                                        .Include(x => x.Producto))
+                        {
+                            sb.AppendLine($"{ajustes.Producto.Nombre} -> {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
+                        }
+                    }
+                    else
+                    {
+                        var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
+                                                                && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
+                        sb.AppendLine($"Los umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
+                    }
                     await _bot.SendTextMessageAsync(
                            message.Chat.Id,
-                           $"Los umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
+                           sb.ToString());
                 }
                 catch
                 {
