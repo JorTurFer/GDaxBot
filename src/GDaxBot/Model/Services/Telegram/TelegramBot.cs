@@ -28,8 +28,8 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             this.context = context;
             botPassword = config.GetValue<string>("Settings:TelegramBotPassword");
             _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
-            _bot.OnMessage += _bot_OnMessage;            
-            foreach (var sesion in context.Sesiones.Include(x=>x.Usuario))
+            _bot.OnMessage += _bot_OnMessage;
+            foreach (var sesion in context.Sesiones.Include(x => x.Usuario))
                 SendMessage(sesion.IdTelegram, $"{sesion.Usuario.Nombre} , acabamos de reiniciar los servicios");
             _bot.StartReceiving();
         }
@@ -46,7 +46,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             var message = e.Message;
 
             if (message == null || message.Type != MessageType.Text) return;
-            
+
             var entrada = message.Text.ToLower().Split(' ');
             StringBuilder sb;
             switch (entrada.First())
@@ -68,8 +68,8 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                 ajuste.IdUsuario = usuario.IdUsuario;
                                 ajuste.UmbralInferior = -5;
                                 ajuste.UmbralSuperior = 5;
-                                ajuste.ValorMarcado = context.Registros.Where(x=>x.IdProducto == producto.IdProducto)
-                                                                        .OrderByDescending(x=>x.Fecha)
+                                ajuste.ValorMarcado = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
+                                                                        .OrderByDescending(x => x.Fecha)
                                                                         .First().Valor;
                                 context.Add(ajuste);
                             }
@@ -148,12 +148,12 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 try
                 {
-                    if (Enum.TryParse(typeof(ProductType), entrada[2].FirstLetterCapital() + "Eur", out object tipo))
-                    {
-                        AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.UmbralGet, Tipo = (ProductType)tipo });
-                    }
-                    else
-                        throw new ArgumentException();
+                    var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
+                                                            && x.Producto.Nombre.ToLower() == entrada[2]).Include(x=>x.Producto).FirstAsync();
+
+                    await _bot.SendTextMessageAsync(
+                           message.Chat.Id,
+                           $"Los umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
                 }
                 catch
                 {
