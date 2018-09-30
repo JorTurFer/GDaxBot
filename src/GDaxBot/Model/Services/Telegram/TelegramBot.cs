@@ -2,6 +2,7 @@
 using GDaxBot.Coinbase;
 using GDaxBot.Extensions;
 using GDaxBot.Model.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -20,10 +21,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
         private readonly int _userID;
 
         // I’ve injected <em>secrets</em> into the constructor as setup in Program.cs
-        public TelegramBot(IOptions<Settings> secrets)
+        public TelegramBot(IConfiguration config)
         {
-            _userID = secrets.Value.UserID;
-            _bot = new TelegramBotClient(secrets.Value.TelegramBotKey);
+            _userID = config.GetValue<int>("Settings:UserID");
+            _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
             _bot.OnMessage += _bot_OnMessage;
             _bot.StartReceiving();
             SendMessage("Iniciando los servicios de monitorizacion");
