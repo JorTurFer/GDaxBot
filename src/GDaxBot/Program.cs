@@ -39,7 +39,7 @@ namespace GDaxBot
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddDbContext<GDaxBotDbContext>(options =>
-                        options.UseMySql(hostContext.Configuration.GetConnectionString("GDaxBot")), ServiceLifetime.Transient);
+                        options.UseMySql(hostContext.Configuration.GetConnectionString("GDaxBot")), ServiceLifetime.Singleton);
 
                     services.AddSingleton<ITelegramBot, TelegramBot>();
                     services.AddSingleton<ICoinbaseService, CoinbaseService>();
