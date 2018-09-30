@@ -27,8 +27,17 @@ namespace GDaxBot.Model.Services.GDaxBot
             _muestrasMinuto = config.GetValue<int>("Settings:MuestrasMinuto"); 
             _telegramBot = telegramBot;
             _coinbaseService = coinbaseService;
+            coinbaseService.AcctionNeeded += CoinbaseService_AcctionNeeded;
         }
-     
+
+        private void CoinbaseService_AcctionNeeded(CoinbaseApiEventArgs e)
+        {
+            foreach(var session in e.UsuarioNotifiacion.Sesiones)
+            {
+                _telegramBot.SendMessage(session.IdTelegram, e.Mensaje);
+            }
+        }
+
         public void Start()
         {
             _seguir = true;

@@ -17,6 +17,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     {
         private readonly CoinbaseProClient _cliente;
         GDaxBotDbContext context;
+        DateTime LastNMotificationCheck;
 
         public event CoinbaseApiEventHandler AcctionNeeded;
 
@@ -51,12 +52,17 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
             }
             await context.SaveChangesAsync();
+            if((DateTime.Now -LastNMotificationCheck).TotalMinutes > 1)
+            {
+                LastNMotificationCheck = DateTime.Now;
+                CheckAlerts();
+            }
         }
 
         public async void CheckAlerts()
         {
             var productos = await context.Registros.OrderBy(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
-            foreach (var usuario in context.Usuarios.Include(x=>x.AjustesProductos).Include(x=>x.Sesiones))
+            foreach (var usuario in context.Usuarios.Where(x=>x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x=>x.AjustesProductos).Include(x=>x.Sesiones))
             {
                 StringBuilder sb = new StringBuilder();
                 foreach(var producto in productos)
@@ -68,14 +74,16 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
                     if(desviacion <= ajustes.UmbralInferior || desviacion >= ajustes.UmbralSuperior)
                     {
-                        sb.AppendLine($"Revisa {producto.Producto.Nombre}, ha cambiado un {desviacion}%, valor total {producto.Valor}");
+                        sb.AppendLine($"Revisa {producto.Producto.Nombre}, ha cambiado un {desviacion.ToString("0.00")}%, valor total {producto.Valor.ToString("0.00")}€, valor marcado {ajustes.ValorMarcado.ToString("0.00")}€");
                     }
                 }
                 if(sb.Length > 0)
                 {
                     AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { UsuarioNotifiacion = usuario, Mensaje = sb.ToString() });
+                    usuario.LastMessage = DateTime.Now;
                 }
             }
+            await context.SaveChangesAsync();
         }
     }
 }
