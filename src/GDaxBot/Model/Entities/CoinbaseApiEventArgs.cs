@@ -8,8 +8,8 @@ namespace GDaxBot.Model.Entities
 {
     public class CoinbaseApiEventArgs : EventArgs
     {
-        Usuario Usuario { get; set; }
-        string Mensaje { get; set; }
+        public Usuario UsuarioNotifiacion { get; set; }
+        public string Mensaje { get; set; }
     }
     public delegate void CoinbaseApiEventHandler(CoinbaseApiEventArgs e);
 }

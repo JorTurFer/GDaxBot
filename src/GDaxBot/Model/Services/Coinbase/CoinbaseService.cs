@@ -73,7 +73,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 }
                 if(sb.Length > 0)
                 {
-                    acction
+                    AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { UsuarioNotifiacion = usuario, Mensaje = sb.ToString() });
                 }
             }
         }
