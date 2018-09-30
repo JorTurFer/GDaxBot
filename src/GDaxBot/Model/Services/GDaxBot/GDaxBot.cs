@@ -1,5 +1,6 @@
 ﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
 using GDaxBot.Coinbase.Model.Services.Telegram;
+using GDaxBot.Data;
 using GDaxBot.Model.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;

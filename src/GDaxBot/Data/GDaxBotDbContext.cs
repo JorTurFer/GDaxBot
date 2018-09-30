@@ -13,9 +13,7 @@ namespace GDaxBot.Data
         {
         }
 
-
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Sesion> Sesiones { get; set; }
-
     }
 }
