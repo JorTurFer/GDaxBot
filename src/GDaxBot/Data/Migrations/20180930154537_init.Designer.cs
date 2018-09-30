@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace GDaxBot.Migrations
+namespace GDaxBot.Data.Migrations
 {
     [DbContext(typeof(GDaxBotDbContext))]
-    [Migration("20180930154319_init")]
+    [Migration("20180930154537_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

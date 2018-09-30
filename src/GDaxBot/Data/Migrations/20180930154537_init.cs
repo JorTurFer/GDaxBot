@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace GDaxBot.Migrations
+namespace GDaxBot.Data.Migrations
 {
     public partial class init : Migration
     {

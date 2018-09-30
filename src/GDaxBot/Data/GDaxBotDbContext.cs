@@ -15,5 +15,7 @@ namespace GDaxBot.Data
 
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Sesion> Sesiones { get; set; }
+        public DbSet<Producto> Productos { get; set; }
+        public DbSet<Registro> Registros { get; set; }
     }
 }

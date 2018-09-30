@@ -5,20 +5,18 @@ using System.Text;
 
 namespace GDaxBot.Data
 {
-    public class Usuario
+    public class Producto
     {
-        public Usuario()
+        public Producto ()
         {
-            Sesiones = new HashSet<Sesion>();
+            Registros = new HashSet<Registro>();
         }
-
         [Key]
-        public int IdUsuario { get; set; }
+        public int IdProducto { get; set; }
 
         public string Nombre { get; set; }
 
-
         //EFC
-        public virtual IEnumerable<Sesion> Sesiones { get; set; }
+        public IEnumerable<Registro> Registros { get; set; }
     }
 }

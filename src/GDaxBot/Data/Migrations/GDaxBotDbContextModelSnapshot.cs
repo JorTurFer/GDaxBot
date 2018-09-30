@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace GDaxBot.Migrations
+namespace GDaxBot.Data.Migrations
 {
     [DbContext(typeof(GDaxBotDbContext))]
     partial class GDaxBotDbContextModelSnapshot : ModelSnapshot
