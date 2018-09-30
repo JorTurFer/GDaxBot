@@ -3,6 +3,7 @@ using CoinbasePro.Network.Authentication;
 using CoinbasePro.Shared.Types;
 using GDaxBot.Data;
 using GDaxBot.Model.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -45,42 +46,23 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                     registro.Valor = -1;
                 }
                 context.Add(registro);
-               
+
             }
             await context.SaveChangesAsync();
         }
 
-
-        public string GetRatio(ProductType tipo)
+        public async void CheckAlerts()
         {
-            StringBuilder sb = new StringBuilder();
-            //var producto = _productos.Where(x => x.Tipo == tipo).First();
-            //sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
-            //sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
-            //sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
-            //sb.AppendLine($"Desviación: {producto.Marcador.ToString("0.0000")}%");
-            //sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
-            //sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
-            //sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
-            return sb.ToString();
-        }
+            var productos = await context.Registros.OrderBy(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
+            foreach (var usuario in context.Usuarios.Include(x=>x.AjustesProductos))
+            {
+                foreach(var producto in productos)
+                {
 
-        public string GetRatio()
-        {
-            StringBuilder sb = new StringBuilder();
-            //foreach (var producto in _productos)
-            //{
-            //    sb.AppendLine($"===={producto.Tipo.ToString().Substring(0, 3).ToUpper()}====");
-            //    sb.AppendLine($"Valor:{producto.UltimosPrecios[0].Valor.ToString("0.00")} EUR");
-            //    sb.AppendLine($"Referencia: {producto.ValorMarcado.ToString("0.00")}€");
-            //    sb.AppendLine($"Desviación: {producto.Marcador.ToString("0.0000")}%");
-            //    sb.AppendLine($"Hora: {producto.Hora.ToString("0.0000")}%");
-            //    sb.AppendLine($"12 Horas: {producto.MedioDia.ToString("0.0000")}%");
-            //    sb.AppendLine($"24 Horas: {producto.Dia.ToString("0.0000")}%");
-            //    sb.AppendLine();
-            //}
-            return sb.ToString();
-        }
 
+
+                }
+            }
+        }
     }
 }
