@@ -18,6 +18,8 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         private readonly CoinbaseProClient _cliente;
         GDaxBotDbContext context;
 
+        public event CoinbaseApiEventHandler AcctionNeeded;
+
         public CoinbaseService(IConfiguration config, GDaxBotDbContext context)
         {
             var authenticator = new Authenticator(config.GetValue<string>("Settings:CoinbaseKey"), config.GetValue<string>("Settings:CoinbaseSecret"), config.GetValue<string>("Settings:CoinbasePassword"));
@@ -54,13 +56,24 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         public async void CheckAlerts()
         {
             var productos = await context.Registros.OrderBy(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
-            foreach (var usuario in context.Usuarios.Include(x=>x.AjustesProductos))
+            foreach (var usuario in context.Usuarios.Include(x=>x.AjustesProductos).Include(x=>x.Sesiones))
             {
+                StringBuilder sb = new StringBuilder();
                 foreach(var producto in productos)
                 {
+                    var valorMarcado = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto)
+                                                            .First().ValorMarcado;
+                    var desviacion = ((producto.Valor - valorMarcado) * 100) / valorMarcado;
+                    var ajustes = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto).First();
 
-
-
+                    if(desviacion <= ajustes.UmbralInferior || desviacion >= ajustes.UmbralSuperior)
+                    {
+                        sb.AppendLine($"Revisa {producto.Producto.Nombre}, ha cambiado un {desviacion}%, valor total {producto.Valor}");
+                    }
+                }
+                if(sb.Length > 0)
+                {
+                    acction
                 }
             }
         }

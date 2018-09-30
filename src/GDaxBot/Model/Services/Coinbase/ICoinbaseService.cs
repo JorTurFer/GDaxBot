@@ -7,5 +7,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     public interface ICoinbaseService
     {
         void CheckProducts();
+        event CoinbaseApiEventHandler AcctionNeeded;
     }
 }
