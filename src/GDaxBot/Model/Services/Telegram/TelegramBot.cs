@@ -279,15 +279,29 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             }
             try
             {
-                var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
-                                                           && x.Producto.Nombre.ToLower() == entrada[1]).Include(x => x.Producto).FirstAsync();
-                ajustes.ValorMarcado = context.Registros.Where(x => x.IdProducto == ajustes.IdProducto).OrderByDescending(x => x.Fecha).First().Valor;
+                StringBuilder sb = new StringBuilder();
+                if (entrada[1] == "all")
+                {
+                    foreach (var ajustes in context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
+                                                                    .Include(x => x.Producto))
+                    {
+                        ajustes.ValorMarcado = context.Registros.Where(x => x.IdProducto == ajustes.IdProducto).OrderByDescending(x => x.Fecha).First().Valor;
+                        sb.AppendLine($"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
+                    }
 
-                await context.SaveChangesAsync();
+                }
+                else
+                {
+                    var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
+                                                               && x.Producto.Nombre.ToLower() == entrada[1]).Include(x => x.Producto).FirstAsync();
+                    ajustes.ValorMarcado = context.Registros.Where(x => x.IdProducto == ajustes.IdProducto).OrderByDescending(x => x.Fecha).First().Valor;
 
+                    await context.SaveChangesAsync();
+                    sb.AppendLine($"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
+                }
                 await _bot.SendTextMessageAsync(
-                          message.Chat.Id,
-                          $"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
+                           message.Chat.Id,
+                           sb.ToString());
             }
             catch
             {
