@@ -28,10 +28,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             this.context = context;
             botPassword = config.GetValue<string>("Settings:TelegramBotPassword");
             _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
-            _bot.OnMessage += _bot_OnMessage;
+            _bot.OnMessage += _bot_OnMessage;            
+            foreach (var sesion in context.Sesiones.Include(x=>x.Usuario))
+                SendMessage(sesion.IdTelegram, $"{sesion.Usuario.Nombre} , acabamos de reiniciar los servicios");
             _bot.StartReceiving();
-            foreach (var sesion in context.Sesiones)
-                SendMessage(sesion.IdTelegram, "Iniciando los servicios de monitorizacion");
         }
 
         public event TelegramBotEventHandler AcctionNeeded;
@@ -46,14 +46,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             var message = e.Message;
 
             if (message == null || message.Type != MessageType.Text) return;
-            //Si el usuario no esta dado de alta, rechaza la conexion
-            if (context.Sesiones.Where(x => x.IdTelegram == message.Chat.Id).Count() == 0)
-            {
-                await _bot.SendTextMessageAsync(
-                        message.Chat.Id,
-                        "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
-                return;
-            }
+            
             var entrada = message.Text.ToLower().Split(' ');
             StringBuilder sb;
             switch (entrada.First())
@@ -62,7 +55,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     if (entrada[2] == botPassword)
                     {
                         Sesion session = new Sesion();
-                        Usuario usuario = await context.Usuarios.Where(x => x.Nombre == entrada[1]).FirstOrDefaultAsync();
+                        Usuario usuario = await context.Usuarios.Where(x => x.Nombre.ToLower() == entrada[1].ToLower()).FirstOrDefaultAsync();
                         if (usuario == null) //Si no existe, creo el usuario y los ajustes
                         {
                             usuario = new Usuario();
@@ -75,7 +68,9 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                 ajuste.IdUsuario = usuario.IdUsuario;
                                 ajuste.UmbralInferior = -5;
                                 ajuste.UmbralSuperior = 5;
-                                ajuste.ValorMarcado = producto.Registros.Last().Valor;
+                                ajuste.ValorMarcado = context.Registros.Where(x=>x.IdProducto == producto.IdProducto)
+                                                                        .OrderByDescending(x=>x.Fecha)
+                                                                        .First().Valor;
                                 context.Add(ajuste);
                             }
                         }
@@ -83,6 +78,9 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                         session.IdUsuario = usuario.IdUsuario;
                         context.Add(session);
                         await context.SaveChangesAsync();
+                        await _bot.SendTextMessageAsync(
+                                message.Chat.Id,
+                                "Se ha añadido la sesion a tu cuenta");
                     }
                     else
                     {
@@ -116,9 +114,19 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     AcctionNeeded?.Invoke(new TelegramBotEventArgs { Comando = TelegramCommands.ActivosDisponibles });
                     break;
                 default:
-                    await _bot.SendTextMessageAsync(
-                                   message.Chat.Id,
-                                   "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                    if (context.Sesiones.Where(x => x.IdTelegram == message.Chat.Id).Count() == 0)
+                    {
+                        await _bot.SendTextMessageAsync(
+                                message.Chat.Id,
+                                "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
+                        return;
+                    }
+                    else
+                    {
+                        await _bot.SendTextMessageAsync(
+                                       message.Chat.Id,
+                                       "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                    }
                     break;
             }
         }

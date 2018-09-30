@@ -3,7 +3,6 @@ using CoinbasePro.Network.Authentication;
 using CoinbasePro.Shared.Types;
 using GDaxBot.Data;
 using GDaxBot.Model.Entities;
-using GDaxBot.Model.Services.ContextServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -16,15 +15,13 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
     class CoinbaseService : ICoinbaseService
     {
         private readonly CoinbaseProClient _cliente;
-        IContextService contextService;
+        GDaxBotDbContext context;
         private readonly int _muestras;
 
         public event CoinbaseApiEventHandler AcctionNeeded;
 
-        public CoinbaseService(IConfiguration config, IContextService contextService)
+        public CoinbaseService(IConfiguration config, GDaxBotDbContext context)
         {
-            this.contextService = contextService;
-
             var authenticator = new Authenticator(config.GetValue<string>("Settings:CoinbaseKey"), config.GetValue<string>("Settings:CoinbaseSecret"), config.GetValue<string>("Settings:CoinbasePassword"));
 
             //create the CoinbasePro client
@@ -32,13 +29,15 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
             //Indico el maximo de muestras a almacenar (esto deberia ir al json)
             _muestras = config.GetValue<int>("Settings:MuestrasMinuto") * 1440 * config.GetValue<int>("Settings:DiasAlmacenados");
+            //Inicio la lista de productos
+            this.context = context;
+
         }
 
         public async void CheckProducts()
         {
             //Obtencion de datos
-            contextService.GetMutex().WaitOne();
-            foreach (var producto in contextService.GetProductos())
+            foreach (var producto in context.Productos)
             {
                 var registro = new Registro();
                 registro.IdProducto = producto.IdProducto;
@@ -52,11 +51,10 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 {
                     registro.Valor = -1;
                 }
-                contextService.Add(registro);
+                context.Add(registro);
                
             }
-            await contextService.SaveChangesAsync();
-            contextService.GetMutex().ReleaseMutex();
+            await context.SaveChangesAsync();
         }
 
         public decimal GetUmbralUp(ProductType tipo)
@@ -125,7 +123,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public IEnumerable<ProductType> GetActivosDisponibles()
         {
-            foreach (var producto in contextService.GetProductos())
+            foreach (var producto in context.Productos)
                 yield return (ProductType)producto.IdProducto;
         }
     }

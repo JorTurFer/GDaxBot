@@ -1,7 +1,6 @@
 ﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
 using GDaxBot.Coinbase.Model.Services.Telegram;
 using GDaxBot.Data;
-using GDaxBot.Model.Services.ContextServices;
 using GDaxBot.Model.Services.GDaxBot;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -40,9 +39,8 @@ namespace GDaxBot
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddDbContext<GDaxBotDbContext>(options =>
-                        options.UseMySql(hostContext.Configuration.GetConnectionString("GDaxBot")));
+                        options.UseMySql(hostContext.Configuration.GetConnectionString("GDaxBot")), ServiceLifetime.Transient);
 
-                    services.AddSingleton<IContextService, ContextService>();
                     services.AddSingleton<ITelegramBot, TelegramBot>();
                     services.AddSingleton<ICoinbaseService, CoinbaseService>();
                     services.AddSingleton<IGDaxBotService, GDaxBotService>();
