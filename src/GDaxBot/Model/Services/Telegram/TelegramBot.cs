@@ -246,24 +246,35 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
         }
         private async void RatioCommand(string[] entrada, Message message)
         {
+            StringBuilder sb = new StringBuilder();
             if (entrada.Length == 1 || entrada[1] == "-help")
             {
-                StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Lista de Subcomandos \"Ratio\":");
                 sb.AppendLine("\tRatio All/\"Activo\"->Obtiene el valor de los activos o del activo seleccionado");
-                await _bot.SendTextMessageAsync(
-                message.Chat.Id,
-                sb.ToString());
-                return;
             }
-            if (entrada[1] == "all")
+            else if (entrada[1] == "all")
             {
-
+                var user = await context.Usuarios.Where(x => x.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
+                                                  .Include(x => x.AjustesProductos)
+                                                  .FirstAsync();
+                foreach (var producto in context.Productos)
+                {
+                    sb.AppendLine(GetRatio(producto, user));
+                }
             }
             else
             {
-
+                var user = await context.Usuarios.Where(x => x.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
+                                                  .Include(x => x.AjustesProductos)
+                                                  .FirstAsync();
+                var producto = await context.Productos.Where(x => x.Nombre.ToLower() == entrada[1])
+                                                        .FirstAsync();
+                sb.AppendLine(GetRatio(producto, user));
             }
+            await _bot.SendTextMessageAsync(
+                           message.Chat.Id,
+                           sb.ToString());
+
         }
         private async void MarcadorCommand(string[] entrada, Message message)
         {
@@ -310,6 +321,54 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                        "Envia una orden válida, si tienes dudas, envia \"Marcador -help\" para pedir ayuda");
             }
 
+        }
+
+        private string GetRatio(Producto producto, Usuario user)
+        {
+            //Obtengo los datos a mostrar
+            var ultimoRegistro = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
+                                                    .OrderByDescending(x => x.Fecha)
+                                                    .First();
+            var valorMarcado = user.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto)
+                                                    .First().ValorMarcado;
+            var desviacion = ((ultimoRegistro.Valor - valorMarcado) * 100) / valorMarcado;
+
+            var registrosHora = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
+            var valorHora = registrosHora.Count() > 0 ? registrosHora.Average(x => x.Valor) : -1;
+            var desviacionHora = GetPorcentaje(ultimoRegistro.Valor, valorHora);
+
+            var registros12Horas = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-720.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-719.8));
+            var valor12Horas = registros12Horas.Count() > 0 ? registros12Horas.Average(x => x.Valor) : -1;
+            var desviacion12Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
+
+            var registros24Horas = context.Registros.Where(x => x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-1440.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-1439.8));
+            var valor24Horas = registros24Horas.Count() > 0 ? registros24Horas.Average(x => x.Valor) : -1;
+            var desviacion24Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"===={producto.Nombre.ToString()}====");
+            sb.AppendLine($"Valor:{ultimoRegistro.Valor.ToString("0.00")} EUR");
+            sb.AppendLine($"Referencia: {valorMarcado.ToString("0.00")}€");
+            sb.AppendLine($"Desviación: {desviacion.ToString("0.0000")}%");
+
+            if (valorHora == -1)
+                sb.AppendLine($"Hora: Sin datos disponibles");
+            else
+                sb.AppendLine($"Hora: {desviacionHora.ToString("0.0000")}%");
+            if (valor12Horas == -1)
+                sb.AppendLine($"12 Horas: Sin datos disponibles");
+            else
+                sb.AppendLine($"12 Horas: {desviacion12Horas.ToString("0.0000")}%");
+            if (valor24Horas == -1)
+                sb.AppendLine($"24 Horas: Sin datos disponibles");
+            else
+                sb.AppendLine($"24 Horas: {desviacion24Horas.ToString("0.0000")}%");
+            return sb.ToString();
+        }
+
+        decimal GetPorcentaje(decimal valorActual, decimal valorRegistro)
+        {
+            return ((valorActual - valorRegistro) * 100) / valorRegistro;
         }
     }
 }

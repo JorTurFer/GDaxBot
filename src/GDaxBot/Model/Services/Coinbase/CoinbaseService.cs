@@ -18,8 +18,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         GDaxBotDbContext context;
         private readonly int _muestras;
 
-        public event CoinbaseApiEventHandler AcctionNeeded;
-
         public CoinbaseService(IConfiguration config, GDaxBotDbContext context)
         {
             var authenticator = new Authenticator(config.GetValue<string>("Settings:CoinbaseKey"), config.GetValue<string>("Settings:CoinbaseSecret"), config.GetValue<string>("Settings:CoinbasePassword"));
@@ -36,6 +34,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public async void CheckProducts()
         {
+            return;
             //Obtencion de datos
             foreach (var producto in context.Productos)
             {
@@ -88,5 +87,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             //}
             return sb.ToString();
         }
+
     }
 }
