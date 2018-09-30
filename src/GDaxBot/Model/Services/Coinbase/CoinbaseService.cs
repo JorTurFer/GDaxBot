@@ -34,7 +34,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public async void CheckProducts()
         {
-            return;
             //Obtencion de datos
             foreach (var producto in context.Productos)
             {
