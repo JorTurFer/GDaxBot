@@ -339,11 +339,11 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
 
             var registros12Horas = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-720.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-719.8));
             var valor12Horas = registros12Horas.Count() > 0 ? registros12Horas.Average(x => x.Valor) : -1;
-            var desviacion12Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
+            var desviacion12Horas = GetPorcentaje(ultimoRegistro.Valor, valor12Horas);
 
             var registros24Horas = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-1440.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-1439.8));
             var valor24Horas = registros24Horas.Count() > 0 ? registros24Horas.Average(x => x.Valor) : -1;
-            var desviacion24Horas = GetPorcentaje(ultimoRegistro.Valor, valorHora);
+            var desviacion24Horas = GetPorcentaje(ultimoRegistro.Valor, valor24Horas);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"===={producto.Nombre.ToString()}====");
