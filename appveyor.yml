@@ -1,5 +1,8 @@
 version: 1.0.{build}
 image: Visual Studio 2017
+configuration:
+- debug
+- release
 before_build:
 - cmd: nuget restore
 clone_script:
