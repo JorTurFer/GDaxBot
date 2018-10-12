@@ -14,6 +14,7 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace GDaxBot.Coinbase.Model.Services.Telegram
 {
@@ -50,7 +51,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
         {
             await _bot.SendTextMessageAsync(ChatID, Message);
         }
-        
+
         async void ProcessMessage(MessageEventArgs e)
         {
             try
@@ -155,17 +156,43 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                         }
                         else
                         {
+                            ReplyKeyboardMarkup ReplyKeyboard = new[]
+                            {
+                                    new[] { "Ratio", "Umbral" },
+                                    new[] { "Marcador", "Activos" },
+                            };
+
                             await _bot.SendTextMessageAsync(
-                                           message.Chat.Id,
-                                           "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                                e.Message.Chat.Id,
+                                "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda",
+                                replyMarkup: ReplyKeyboard);
+
                         }
                         break;
                 }
+            }
+            catch
+            {
+                ReplyKeyboardMarkup ReplyKeyboard = new[]
+                {
+                        new[] { "Ratio", "Umbral" },
+                        new[] { "Marcador", "Activos" },
+                };
+
+                await _bot.SendTextMessageAsync(
+                                e.Message.Chat.Id,
+                                "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda",
+                                replyMarkup: ReplyKeyboard);
             }
             finally
             {
                 context.WorkInProgress.Set();
             }
+        }
+
+        private bool AvailableActive(string activo)
+        {
+            return context.Productos.Any(x => x.Nombre == activo);
         }
 
         private async void UmbralCommand(string[] entrada, Message message)
@@ -194,11 +221,15 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                             sb.AppendLine($"{ajustes.Producto.Nombre} -> {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
                         }
                     }
-                    else
+                    else if (AvailableActive(entrada[2]))
                     {
                         var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                 && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
                         sb.AppendLine($"Los umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{entrada[2]} no es un activo valido");
                     }
                     await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -232,7 +263,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                             }
                             await context.SaveChangesAsync();
                         }
-                        else
+                        else if (AvailableActive(entrada[2]))
                         {
                             var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                     && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
@@ -242,7 +273,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                 ajustes.UmbralInferior = valor;
                             await context.SaveChangesAsync();
                             sb.AppendLine($"{ajustes.Producto.Nombre} -> {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
-
+                        }
+                        else
+                        {
+                            sb.AppendLine($"{entrada[2]} no es un activo valido");
                         }
                         await _bot.SendTextMessageAsync(
                                message.Chat.Id,
@@ -282,7 +316,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     sb.AppendLine(GetRatio(producto, user));
                 }
             }
-            else
+            else if (AvailableActive(entrada[1]))
             {
                 var user = await context.Usuarios.Where(x => x.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
                                                   .Include(x => x.AjustesProductos)
@@ -290,6 +324,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 var producto = await context.Productos.Where(x => x.Nombre.ToLower() == entrada[1])
                                                         .FirstAsync();
                 sb.AppendLine(GetRatio(producto, user));
+            }
+            else
+            {
+                sb.AppendLine($"{entrada[1]} no es un activo valido");
             }
             await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -321,7 +359,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     }
 
                 }
-                else
+                else if (AvailableActive(entrada[1]))
                 {
                     var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                && x.Producto.Nombre.ToLower() == entrada[1]).Include(x => x.Producto).FirstAsync();
@@ -329,6 +367,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
 
                     await context.SaveChangesAsync();
                     sb.AppendLine($"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
+                }
+                else
+                {
+                    sb.AppendLine($"{entrada[1]} no es un activo valido");
                 }
                 await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -353,7 +395,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                                     .First().ValorMarcado;
             var desviacion = ((ultimoRegistro.Valor - valorMarcado) * 100) / valorMarcado;
 
-            var registrosHora = context.Registros.Where(x =>x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
+            var registrosHora = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
             var valorHora = registrosHora.Count() > 0 ? registrosHora.Average(x => x.Valor) : -1;
             var desviacionHora = GetPorcentaje(ultimoRegistro.Valor, valorHora);
 
