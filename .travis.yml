@@ -1,0 +1,17 @@
+language: csharp
+dist: trusty
+mono: none
+dotnet: 2.1.301
+os:
+  - linux
+  - osx
+install:
+- dotnet restore
+script:
+- dotnet build
+git:
+  submodules: false
+before_install:
+  - git submodule update --init
+-notifications:
+-  email: false
