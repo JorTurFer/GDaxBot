@@ -29,122 +29,142 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             botPassword = config.GetValue<string>("Settings:TelegramBotPassword");
             _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
             _bot.OnMessage += _bot_OnMessage;
+            _bot.OnMessageEdited += _bot_OnMessageEdited;
+            context.WorkInProgress.WaitOne();
             foreach (var sesion in context.Sesiones.Include(x => x.Usuario))
                 SendMessage(sesion.IdTelegram, $"{sesion.Usuario.Nombre} , acabamos de reiniciar los servicios");
+            context.WorkInProgress.Set();
             _bot.StartReceiving();
         }
 
+        private void _bot_OnMessageEdited(object sender, MessageEventArgs e)
+        {
+            ProcessMessage(e);
+        }
+
+        private void _bot_OnMessage(object sender, MessageEventArgs e)
+        {
+            ProcessMessage(e);
+        }
         public async void SendMessage(long ChatID, string Message)
         {
             await _bot.SendTextMessageAsync(ChatID, Message);
         }
-
-        private async void _bot_OnMessage(object sender, MessageEventArgs e)
+        
+        async void ProcessMessage(MessageEventArgs e)
         {
-            var logged = true;
-            var message = e.Message;
-
-            if (message == null || message.Type != MessageType.Text) return;
-
-            var entrada = message.Text.ToLower().Split(' ');
-
-            //Lanzo el comando registrar en caso de ser el que se envia
-            if (entrada.First() == "-user")
+            try
             {
-                if (entrada[2] == botPassword)
+                context.WorkInProgress.WaitOne();
+                var logged = true;
+                var message = e.Message;
+
+                if (message == null || message.Type != MessageType.Text) return;
+
+                var entrada = message.Text.ToLower().Split(' ');
+
+                //Lanzo el comando registrar en caso de ser el que se envia
+                if (entrada.First() == "-user")
                 {
-                    Sesion session = new Sesion();
-                    Usuario usuario = await context.Usuarios.Where(x => x.Nombre.ToLower() == entrada[1].ToLower()).FirstOrDefaultAsync();
-                    if (usuario == null) //Si no existe, creo el usuario y los ajustes
+                    if (entrada[2] == botPassword)
                     {
-                        usuario = new Usuario();
-                        usuario.Nombre = entrada[1];
-                        context.Add(usuario);
-                        foreach (var producto in context.Productos)
+                        Sesion session = new Sesion();
+                        Usuario usuario = await context.Usuarios.Where(x => x.Nombre.ToLower() == entrada[1].ToLower()).FirstOrDefaultAsync();
+                        if (usuario == null) //Si no existe, creo el usuario y los ajustes
                         {
-                            AjustesProducto ajuste = new AjustesProducto();
-                            ajuste.IdProducto = producto.IdProducto;
-                            ajuste.IdUsuario = usuario.IdUsuario;
-                            ajuste.UmbralInferior = -5;
-                            ajuste.UmbralSuperior = 5;
-                            ajuste.ValorMarcado = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
-                                                                    .OrderByDescending(x => x.Fecha)
-                                                                    .First().Valor;
-                            context.Add(ajuste);
+                            usuario = new Usuario();
+                            usuario.Nombre = entrada[1];
+                            context.Add(usuario);
+                            foreach (var producto in context.Productos)
+                            {
+                                AjustesProducto ajuste = new AjustesProducto();
+                                ajuste.IdProducto = producto.IdProducto;
+                                ajuste.IdUsuario = usuario.IdUsuario;
+                                ajuste.UmbralInferior = -5;
+                                ajuste.UmbralSuperior = 5;
+                                ajuste.ValorMarcado = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
+                                                                        .OrderByDescending(x => x.Fecha)
+                                                                        .First().Valor;
+                                context.Add(ajuste);
+                            }
                         }
-                    }
-                    session.IdTelegram = message.Chat.Id;
-                    session.IdUsuario = usuario.IdUsuario;
-                    context.Add(session);
-                    await context.SaveChangesAsync();
-                    await _bot.SendTextMessageAsync(
-                            message.Chat.Id,
-                            "Se ha añadido la sesion a tu cuenta");
-                    entrada[0] = "-help";
-                }
-                else
-                {
-                    await _bot.SendTextMessageAsync(
-                    message.Chat.Id,
-                    "Contraseña incorrecta");
-                    return;
-                }
-            }
-
-            if (!context.Sesiones.Any(x => x.IdTelegram == message.Chat.Id))
-            {
-                logged = false;
-                entrada[0] = "";
-            }
-
-            StringBuilder sb;
-            switch (entrada.First())
-            {
-
-                case "-help":
-                    sb = new StringBuilder();
-                    sb.AppendLine("Lista de Comandos:");
-                    sb.AppendLine("\t\tUmbral get/set All/\"Activo\"");
-                    sb.AppendLine("\t\tRatio All/\"Activo\"");
-                    sb.AppendLine("\t\tMarcador \"Activo\"");
-                    sb.AppendLine("\t\tActivos");
-
-                    await _bot.SendTextMessageAsync(
-                        message.Chat.Id,
-                        sb.ToString());
-                    break;
-                case "umbral":
-                    UmbralCommand(entrada, message);
-                    break;
-                case "ratio":
-                    RatioCommand(entrada, message);
-                    break;
-                case "marcador":
-                    MarcadorCommand(entrada, message);
-                    break;
-                case "activos":
-                    sb = new StringBuilder();
-                    foreach (var producto in context.Productos)
-                        sb.AppendLine(producto.Nombre);
-                    await _bot.SendTextMessageAsync(
-                        message.Chat.Id,
-                        sb.ToString());
-                    break;
-                default:
-                    if (!logged)
-                    {
+                        session.IdTelegram = message.Chat.Id;
+                        session.IdUsuario = usuario.IdUsuario;
+                        context.Add(session);
+                        await context.SaveChangesAsync();
                         await _bot.SendTextMessageAsync(
                                 message.Chat.Id,
-                                "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
-                        return;
+                                "Se ha añadido la sesion a tu cuenta");
+                        entrada[0] = "-help";
                     }
                     else
                     {
                         await _bot.SendTextMessageAsync(
-                                       message.Chat.Id,
-                                       "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                        message.Chat.Id,
+                        "Contraseña incorrecta");
+                        return;
                     }
-                    break;
+                }
+
+                if (!context.Sesiones.Any(x => x.IdTelegram == message.Chat.Id))
+                {
+                    logged = false;
+                    entrada[0] = "";
+                }
+
+                StringBuilder sb;
+                switch (entrada.First())
+                {
+
+                    case "-help":
+                        sb = new StringBuilder();
+                        sb.AppendLine("Lista de Comandos:");
+                        sb.AppendLine("\t\tUmbral get/set All/\"Activo\"");
+                        sb.AppendLine("\t\tRatio All/\"Activo\"");
+                        sb.AppendLine("\t\tMarcador \"Activo\"");
+                        sb.AppendLine("\t\tActivos");
+
+                        await _bot.SendTextMessageAsync(
+                            message.Chat.Id,
+                            sb.ToString());
+                        break;
+                    case "umbral":
+                        UmbralCommand(entrada, message);
+                        break;
+                    case "ratio":
+                        RatioCommand(entrada, message);
+                        break;
+                    case "marcador":
+                        MarcadorCommand(entrada, message);
+                        break;
+                    case "activos":
+                        sb = new StringBuilder();
+                        foreach (var producto in context.Productos)
+                            sb.AppendLine(producto.Nombre);
+                        await _bot.SendTextMessageAsync(
+                            message.Chat.Id,
+                            sb.ToString());
+                        break;
+                    default:
+                        if (!logged)
+                        {
+                            await _bot.SendTextMessageAsync(
+                                    message.Chat.Id,
+                                    "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
+                            return;
+                        }
+                        else
+                        {
+                            await _bot.SendTextMessageAsync(
+                                           message.Chat.Id,
+                                           "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                        }
+                        break;
+                }
+            }
+            finally
+            {
+                context.WorkInProgress.Set();
             }
         }
 
