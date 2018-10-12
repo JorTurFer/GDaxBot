@@ -201,8 +201,8 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Lista de Subcomandos \"Umbral\":");
-                sb.AppendLine("\tGet \"Activo\"->Obtiene el valor de activacion de la alerta para el activo indicado");
-                sb.AppendLine("\tSet \"Activo\" \"porcentaje\"->Modifica el valor de activaciond e la alerta para el activo indicado");
+                sb.AppendLine("\tGet \"Activo\"/\"All\"·->Obtiene el valor de activación de la alerta para el activo indicado");
+                sb.AppendLine("\tSet \"Activo\"/\"All\" \"porcentaje\"->Modifica el valor de activación de la alerta para el activo indicado");
                 await _bot.SendTextMessageAsync(
                 message.Chat.Id,
                 sb.ToString());
@@ -304,7 +304,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             if (entrada.Length == 1 || entrada[1] == "-help")
             {
                 sb.AppendLine("Lista de Subcomandos \"Ratio\":");
-                sb.AppendLine("\tRatio All/\"Activo\"->Obtiene el valor de los activos o del activo seleccionado");
+                sb.AppendLine("\tRatio \"Activo\"/\"All\"->Obtiene el valor de los activos o del activo seleccionado");
             }
             else if (entrada[1] == "all")
             {
@@ -340,7 +340,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Lista de Subcomandos \"Marcador\":");
-                sb.AppendLine("\tMarcador \"Activo\"->Indica el calor sobre el que operan los porcentajes personalizados");
+                sb.AppendLine("\tMarcador \"Activo\"/\"All\"->Ajusta el valor sobre el que operan los porcentajes personalizados al valor actual de la divisa");
                 await _bot.SendTextMessageAsync(
                 message.Chat.Id,
                 sb.ToString());
