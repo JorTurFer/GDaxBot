@@ -18,7 +18,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         private readonly CoinbaseProClient _cliente;
         GDaxBotDbContext context;
         DateTime LastNMotificationCheck;
-
+        List<Producto> _productos;
         public event CoinbaseApiEventHandler AcctionNeeded;
 
         public CoinbaseService(IConfiguration config, GDaxBotDbContext context)
@@ -29,12 +29,14 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
             _cliente = new CoinbaseProClient(authenticator);
 
             this.context = context;
+            _productos = context.Productos.ToList();
         }
 
         public async void CheckProducts()
         {
             //Obtencion de datos
-            foreach (var producto in context.Productos)
+            List<Registro> registros = new List<Registro>();
+            foreach (var producto in _productos)
             {
                 var registro = new Registro();
                 registro.IdProducto = producto.IdProducto;
@@ -48,11 +50,14 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 {
                     registro.Valor = -1;
                 }
-                context.Add(registro);
-
+                registros.Add(registro);
             }
+
+            context.WorkInProgress.WaitOne();
+            context.Registros.AddRange(registros);
+            context.WorkInProgress.Set();
             await context.SaveChangesAsync();
-            if((DateTime.Now -LastNMotificationCheck).TotalMinutes > 1)
+            if ((DateTime.Now - LastNMotificationCheck).TotalMinutes > 1)
             {
                 LastNMotificationCheck = DateTime.Now;
                 CheckAlerts();
@@ -62,22 +67,22 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
         public async void CheckAlerts()
         {
             var productos = await context.Registros.OrderByDescending(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
-            foreach (var usuario in context.Usuarios.Where(x=>x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x=>x.AjustesProductos).Include(x=>x.Sesiones))
+            foreach (var usuario in context.Usuarios.Where(x => x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x => x.AjustesProductos).Include(x => x.Sesiones))
             {
                 StringBuilder sb = new StringBuilder();
-                foreach(var producto in productos)
+                foreach (var producto in productos)
                 {
                     var valorMarcado = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto)
                                                             .First().ValorMarcado;
                     var desviacion = ((producto.Valor - valorMarcado) * 100) / valorMarcado;
                     var ajustes = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto).First();
 
-                    if(desviacion <= ajustes.UmbralInferior || desviacion >= ajustes.UmbralSuperior)
+                    if (desviacion <= ajustes.UmbralInferior || desviacion >= ajustes.UmbralSuperior)
                     {
                         sb.AppendLine($"Revisa {producto.Producto.Nombre}, ha cambiado un {desviacion.ToString("0.00")}%, valor total {producto.Valor.ToString("0.00")}€, valor marcado {ajustes.ValorMarcado.ToString("0.00")}€");
                     }
                 }
-                if(sb.Length > 0)
+                if (sb.Length > 0)
                 {
                     AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { UsuarioNotifiacion = usuario, Mensaje = sb.ToString() });
                     usuario.LastMessage = DateTime.Now;
