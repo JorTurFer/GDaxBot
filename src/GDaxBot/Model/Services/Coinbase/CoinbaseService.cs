@@ -55,8 +55,8 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
             context.WorkInProgress.WaitOne();
             context.Registros.AddRange(registros);
-            context.WorkInProgress.Set();
             await context.SaveChangesAsync();
+            context.WorkInProgress.Set();
             if ((DateTime.Now - LastNMotificationCheck).TotalMinutes > 1)
             {
                 LastNMotificationCheck = DateTime.Now;
@@ -66,8 +66,11 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
 
         public async void CheckAlerts()
         {
+            context.WorkInProgress.WaitOne();
             var productos = await context.Registros.OrderByDescending(x => x.Fecha).Take(4).Include(x => x.Producto).ToListAsync();
-            foreach (var usuario in context.Usuarios.Where(x => x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x => x.AjustesProductos).Include(x => x.Sesiones))
+            var usuarios = await context.Usuarios.Where(x => x.LastMessage < DateTime.Now.AddMinutes(-5)).Include(x => x.AjustesProductos).Include(x => x.Sesiones).ToListAsync();
+            context.WorkInProgress.Set();
+            foreach (var usuario in usuarios)
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (var producto in productos)
@@ -88,7 +91,6 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                     usuario.LastMessage = DateTime.Now;
                 }
             }
-            await context.SaveChangesAsync();
         }
     }
 }
