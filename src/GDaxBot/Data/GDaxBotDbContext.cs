@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 
 namespace GDaxBot.Data
 {
     public class GDaxBotDbContext : DbContext
     {
+        public AutoResetEvent WorkInProgress = new AutoResetEvent(true);
+
         //Constructor con parametros para la configuracion
         public GDaxBotDbContext(DbContextOptions options)
         : base(options)

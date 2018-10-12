@@ -14,6 +14,7 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace GDaxBot.Coinbase.Model.Services.Telegram
 {
@@ -29,123 +30,169 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             botPassword = config.GetValue<string>("Settings:TelegramBotPassword");
             _bot = new TelegramBotClient(config.GetValue<string>("Settings:TelegramBotKey"));
             _bot.OnMessage += _bot_OnMessage;
+            _bot.OnMessageEdited += _bot_OnMessageEdited;
+            context.WorkInProgress.WaitOne();
             foreach (var sesion in context.Sesiones.Include(x => x.Usuario))
                 SendMessage(sesion.IdTelegram, $"{sesion.Usuario.Nombre} , acabamos de reiniciar los servicios");
+            context.WorkInProgress.Set();
             _bot.StartReceiving();
         }
 
+        private void _bot_OnMessageEdited(object sender, MessageEventArgs e)
+        {
+            ProcessMessage(e);
+        }
+
+        private void _bot_OnMessage(object sender, MessageEventArgs e)
+        {
+            ProcessMessage(e);
+        }
         public async void SendMessage(long ChatID, string Message)
         {
             await _bot.SendTextMessageAsync(ChatID, Message);
         }
 
-        private async void _bot_OnMessage(object sender, MessageEventArgs e)
+        async void ProcessMessage(MessageEventArgs e)
         {
-            var logged = true;
-            var message = e.Message;
-
-            if (message == null || message.Type != MessageType.Text) return;
-
-            var entrada = message.Text.ToLower().Split(' ');
-
-            //Lanzo el comando registrar en caso de ser el que se envia
-            if (entrada.First() == "-user")
+            try
             {
-                if (entrada[2] == botPassword)
+                context.WorkInProgress.WaitOne();
+                var logged = true;
+                var message = e.Message;
+
+                if (message == null || message.Type != MessageType.Text) return;
+
+                var entrada = message.Text.ToLower().Split(' ');
+
+                //Lanzo el comando registrar en caso de ser el que se envia
+                if (entrada.First() == "-user")
                 {
-                    Sesion session = new Sesion();
-                    Usuario usuario = await context.Usuarios.Where(x => x.Nombre.ToLower() == entrada[1].ToLower()).FirstOrDefaultAsync();
-                    if (usuario == null) //Si no existe, creo el usuario y los ajustes
+                    if (entrada[2] == botPassword)
                     {
-                        usuario = new Usuario();
-                        usuario.Nombre = entrada[1];
-                        context.Add(usuario);
-                        foreach (var producto in context.Productos)
+                        Sesion session = new Sesion();
+                        Usuario usuario = await context.Usuarios.Where(x => x.Nombre.ToLower() == entrada[1].ToLower()).FirstOrDefaultAsync();
+                        if (usuario == null) //Si no existe, creo el usuario y los ajustes
                         {
-                            AjustesProducto ajuste = new AjustesProducto();
-                            ajuste.IdProducto = producto.IdProducto;
-                            ajuste.IdUsuario = usuario.IdUsuario;
-                            ajuste.UmbralInferior = -5;
-                            ajuste.UmbralSuperior = 5;
-                            ajuste.ValorMarcado = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
-                                                                    .OrderByDescending(x => x.Fecha)
-                                                                    .First().Valor;
-                            context.Add(ajuste);
+                            usuario = new Usuario();
+                            usuario.Nombre = entrada[1];
+                            context.Add(usuario);
+                            foreach (var producto in context.Productos)
+                            {
+                                AjustesProducto ajuste = new AjustesProducto();
+                                ajuste.IdProducto = producto.IdProducto;
+                                ajuste.IdUsuario = usuario.IdUsuario;
+                                ajuste.UmbralInferior = -5;
+                                ajuste.UmbralSuperior = 5;
+                                ajuste.ValorMarcado = context.Registros.Where(x => x.IdProducto == producto.IdProducto)
+                                                                        .OrderByDescending(x => x.Fecha)
+                                                                        .First().Valor;
+                                context.Add(ajuste);
+                            }
                         }
-                    }
-                    session.IdTelegram = message.Chat.Id;
-                    session.IdUsuario = usuario.IdUsuario;
-                    context.Add(session);
-                    await context.SaveChangesAsync();
-                    await _bot.SendTextMessageAsync(
-                            message.Chat.Id,
-                            "Se ha añadido la sesion a tu cuenta");
-                    entrada[0] = "-help";
-                }
-                else
-                {
-                    await _bot.SendTextMessageAsync(
-                    message.Chat.Id,
-                    "Contraseña incorrecta");
-                    return;
-                }
-            }
-
-            if (!context.Sesiones.Any(x => x.IdTelegram == message.Chat.Id))
-            {
-                logged = false;
-                entrada[0] = "";
-            }
-
-            StringBuilder sb;
-            switch (entrada.First())
-            {
-
-                case "-help":
-                    sb = new StringBuilder();
-                    sb.AppendLine("Lista de Comandos:");
-                    sb.AppendLine("\t\tUmbral get/set All/\"Activo\"");
-                    sb.AppendLine("\t\tRatio All/\"Activo\"");
-                    sb.AppendLine("\t\tMarcador \"Activo\"");
-                    sb.AppendLine("\t\tActivos");
-
-                    await _bot.SendTextMessageAsync(
-                        message.Chat.Id,
-                        sb.ToString());
-                    break;
-                case "umbral":
-                    UmbralCommand(entrada, message);
-                    break;
-                case "ratio":
-                    RatioCommand(entrada, message);
-                    break;
-                case "marcador":
-                    MarcadorCommand(entrada, message);
-                    break;
-                case "activos":
-                    sb = new StringBuilder();
-                    foreach (var producto in context.Productos)
-                        sb.AppendLine(producto.Nombre);
-                    await _bot.SendTextMessageAsync(
-                        message.Chat.Id,
-                        sb.ToString());
-                    break;
-                default:
-                    if (!logged)
-                    {
+                        session.IdTelegram = message.Chat.Id;
+                        session.IdUsuario = usuario.IdUsuario;
+                        context.Add(session);
+                        await context.SaveChangesAsync();
                         await _bot.SendTextMessageAsync(
                                 message.Chat.Id,
-                                "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
-                        return;
+                                "Se ha añadido la sesion a tu cuenta");
+                        entrada[0] = "-help";
                     }
                     else
                     {
                         await _bot.SendTextMessageAsync(
-                                       message.Chat.Id,
-                                       "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda");
+                        message.Chat.Id,
+                        "Contraseña incorrecta");
+                        return;
                     }
-                    break;
+                }
+
+                if (!context.Sesiones.Any(x => x.IdTelegram == message.Chat.Id))
+                {
+                    logged = false;
+                    entrada[0] = "";
+                }
+
+                StringBuilder sb;
+                switch (entrada.First())
+                {
+
+                    case "-help":
+                        sb = new StringBuilder();
+                        sb.AppendLine("Lista de Comandos:");
+                        sb.AppendLine("\t\tUmbral get/set All/\"Activo\"");
+                        sb.AppendLine("\t\tRatio All/\"Activo\"");
+                        sb.AppendLine("\t\tMarcador \"Activo\"");
+                        sb.AppendLine("\t\tActivos");
+
+                        await _bot.SendTextMessageAsync(
+                            message.Chat.Id,
+                            sb.ToString());
+                        break;
+                    case "umbral":
+                        UmbralCommand(entrada, message);
+                        break;
+                    case "ratio":
+                        RatioCommand(entrada, message);
+                        break;
+                    case "marcador":
+                        MarcadorCommand(entrada, message);
+                        break;
+                    case "activos":
+                        sb = new StringBuilder();
+                        foreach (var producto in context.Productos)
+                            sb.AppendLine(producto.Nombre);
+                        await _bot.SendTextMessageAsync(
+                            message.Chat.Id,
+                            sb.ToString());
+                        break;
+                    default:
+                        if (!logged)
+                        {
+                            await _bot.SendTextMessageAsync(
+                                    message.Chat.Id,
+                                    "Introduce la contraseña y tu usuario mediante el comando -user \"Usuario\" ContraseñaDelBot");
+                            return;
+                        }
+                        else
+                        {
+                            ReplyKeyboardMarkup ReplyKeyboard = new[]
+                            {
+                                    new[] { "Ratio", "Umbral" },
+                                    new[] { "Marcador", "Activos" },
+                            };
+
+                            await _bot.SendTextMessageAsync(
+                                e.Message.Chat.Id,
+                                "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda",
+                                replyMarkup: ReplyKeyboard);
+
+                        }
+                        break;
+                }
             }
+            catch
+            {
+                ReplyKeyboardMarkup ReplyKeyboard = new[]
+                {
+                        new[] { "Ratio", "Umbral" },
+                        new[] { "Marcador", "Activos" },
+                };
+
+                await _bot.SendTextMessageAsync(
+                                e.Message.Chat.Id,
+                                "Envia una orden, si tienes dudas, envia \"-help\" para pedir ayuda",
+                                replyMarkup: ReplyKeyboard);
+            }
+            finally
+            {
+                context.WorkInProgress.Set();
+            }
+        }
+
+        private bool AvailableActive(string activo)
+        {
+            return context.Productos.Any(x => x.Nombre == activo);
         }
 
         private async void UmbralCommand(string[] entrada, Message message)
@@ -154,8 +201,8 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Lista de Subcomandos \"Umbral\":");
-                sb.AppendLine("\tGet \"Activo\"->Obtiene el valor de activacion de la alerta para el activo indicado");
-                sb.AppendLine("\tSet \"Activo\" \"porcentaje\"->Modifica el valor de activaciond e la alerta para el activo indicado");
+                sb.AppendLine("\tGet \"Activo\"/\"All\"·->Obtiene el valor de activación de la alerta para el activo indicado");
+                sb.AppendLine("\tSet \"Activo\"/\"All\" \"porcentaje\"->Modifica el valor de activación de la alerta para el activo indicado");
                 await _bot.SendTextMessageAsync(
                 message.Chat.Id,
                 sb.ToString());
@@ -174,11 +221,15 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                             sb.AppendLine($"{ajustes.Producto.Nombre} -> {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
                         }
                     }
-                    else
+                    else if (AvailableActive(entrada[2]))
                     {
                         var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                 && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
                         sb.AppendLine($"Los umbrales de notificacion de {ajustes.Producto.Nombre} son {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{entrada[2]} no es un activo valido");
                     }
                     await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -212,7 +263,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                             }
                             await context.SaveChangesAsync();
                         }
-                        else
+                        else if (AvailableActive(entrada[2]))
                         {
                             var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                     && x.Producto.Nombre.ToLower() == entrada[2]).Include(x => x.Producto).FirstAsync();
@@ -222,7 +273,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                 ajustes.UmbralInferior = valor;
                             await context.SaveChangesAsync();
                             sb.AppendLine($"{ajustes.Producto.Nombre} -> {ajustes.UmbralInferior.ToString("0.00")}% y {ajustes.UmbralSuperior.ToString("0.00")}%");
-
+                        }
+                        else
+                        {
+                            sb.AppendLine($"{entrada[2]} no es un activo valido");
                         }
                         await _bot.SendTextMessageAsync(
                                message.Chat.Id,
@@ -250,7 +304,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             if (entrada.Length == 1 || entrada[1] == "-help")
             {
                 sb.AppendLine("Lista de Subcomandos \"Ratio\":");
-                sb.AppendLine("\tRatio All/\"Activo\"->Obtiene el valor de los activos o del activo seleccionado");
+                sb.AppendLine("\tRatio \"Activo\"/\"All\"->Obtiene el valor de los activos o del activo seleccionado");
             }
             else if (entrada[1] == "all")
             {
@@ -262,7 +316,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     sb.AppendLine(GetRatio(producto, user));
                 }
             }
-            else
+            else if (AvailableActive(entrada[1]))
             {
                 var user = await context.Usuarios.Where(x => x.Sesiones.Any(y => y.IdTelegram == message.Chat.Id))
                                                   .Include(x => x.AjustesProductos)
@@ -270,6 +324,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                 var producto = await context.Productos.Where(x => x.Nombre.ToLower() == entrada[1])
                                                         .FirstAsync();
                 sb.AppendLine(GetRatio(producto, user));
+            }
+            else
+            {
+                sb.AppendLine($"{entrada[1]} no es un activo valido");
             }
             await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -282,7 +340,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Lista de Subcomandos \"Marcador\":");
-                sb.AppendLine("\tMarcador \"Activo\"->Indica el calor sobre el que operan los porcentajes personalizados");
+                sb.AppendLine("\tMarcador \"Activo\"/\"All\"->Ajusta el valor sobre el que operan los porcentajes personalizados al valor actual de la divisa");
                 await _bot.SendTextMessageAsync(
                 message.Chat.Id,
                 sb.ToString());
@@ -301,7 +359,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                     }
 
                 }
-                else
+                else if (AvailableActive(entrada[1]))
                 {
                     var ajustes = await context.AjustesProductos.Where(x => x.Usuario.Sesiones.Any(y => y.IdTelegram == message.Chat.Id)
                                                                && x.Producto.Nombre.ToLower() == entrada[1]).Include(x => x.Producto).FirstAsync();
@@ -309,6 +367,10 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
 
                     await context.SaveChangesAsync();
                     sb.AppendLine($"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
+                }
+                else
+                {
+                    sb.AppendLine($"{entrada[1]} no es un activo valido");
                 }
                 await _bot.SendTextMessageAsync(
                            message.Chat.Id,
@@ -333,7 +395,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                                                     .First().ValorMarcado;
             var desviacion = ((ultimoRegistro.Valor - valorMarcado) * 100) / valorMarcado;
 
-            var registrosHora = context.Registros.Where(x =>x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
+            var registrosHora = context.Registros.Where(x => x.IdProducto == producto.IdProducto && x.Fecha >= ultimoRegistro.Fecha.AddMinutes(-60.2) && x.Fecha <= ultimoRegistro.Fecha.AddMinutes(-59.8));
             var valorHora = registrosHora.Count() > 0 ? registrosHora.Average(x => x.Valor) : -1;
             var desviacionHora = GetPorcentaje(ultimoRegistro.Valor, valorHora);
 
