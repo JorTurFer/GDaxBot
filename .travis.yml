@@ -9,9 +9,5 @@ install:
 - dotnet restore
 script:
 - dotnet build
-git:
-  submodules: false
-before_install:
-  - git submodule update --init
 -notifications:
 -  email: false
