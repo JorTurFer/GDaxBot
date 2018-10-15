@@ -52,27 +52,19 @@ namespace GDaxBot
 
         private void OnStarted()
         {
-
         }
 
         private void OnStopping()
         {
-            //serviceProvider.GetService<ITelegramBot>().SendMessage($"Ceerrando el servicio");
-            //var service = serviceProvider.GetService<IGDaxBotService>();
-            //service.Stop();
         }
 
         private void OnStopped()
         {
-
         }
 
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            //var service = serviceProvider.GetService<IGDaxBotService>();
-            //service.Stop();
-            //serviceProvider.GetService<ITelegramBot>().SendMessage($"Cierre del servicio");
             return Task.CompletedTask;
         }
     }
