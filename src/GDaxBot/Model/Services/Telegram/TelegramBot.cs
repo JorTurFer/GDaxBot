@@ -1,13 +1,7 @@
-﻿using CoinbasePro.Shared.Types;
-using GDaxBot.Coinbase;
-using GDaxBot.Data;
-using GDaxBot.Extensions;
-using GDaxBot.Model.Entities;
+﻿using GDaxBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Telegram.Bot;
