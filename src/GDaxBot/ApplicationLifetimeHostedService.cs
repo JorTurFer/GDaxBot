@@ -36,10 +36,17 @@ namespace GDaxBot
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
-        {          
-            var service = serviceProvider.GetService<IGDaxBotService>();
+        {
+            try
+            {
+                var service = serviceProvider.GetService<IGDaxBotService>();
 
-            service.Start();
+                service.Start();
+            }
+            catch(Exception ex)
+            {
+                logger.LogError($"{ex.Message},{ex.StackTrace}");
+            }
             return Task.CompletedTask;
         }
 
