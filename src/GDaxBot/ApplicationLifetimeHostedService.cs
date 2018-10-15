@@ -1,8 +1,4 @@
-﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
-using GDaxBot.Coinbase.Model.Services.Telegram;
-using GDaxBot.Data;
-using GDaxBot.Model.Services.GDaxBot;
-using Microsoft.EntityFrameworkCore;
+﻿using GDaxBot.Model.Services.GDaxBot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

@@ -1,14 +1,9 @@
 ﻿using GDaxBot.Coinbase.Model.Services.Coinbase;
 using GDaxBot.Coinbase.Model.Services.Telegram;
-using GDaxBot.Data;
 using GDaxBot.Model.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 
 namespace GDaxBot.Model.Services.GDaxBot
