@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GDaxBot", "src\GDaxBot\GDaxBot.csproj", "{774289E7-8BBB-4D60-BB2A-E61BC2BA555B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoinbasePro", "src\CoinbaseAPI\CoinbasePro\CoinbasePro.csproj", "{83EB5161-A236-4E7E-B1CD-D0BF52E3A87E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{774289E7-8BBB-4D60-BB2A-E61BC2BA555B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{774289E7-8BBB-4D60-BB2A-E61BC2BA555B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{774289E7-8BBB-4D60-BB2A-E61BC2BA555B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{83EB5161-A236-4E7E-B1CD-D0BF52E3A87E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{83EB5161-A236-4E7E-B1CD-D0BF52E3A87E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{83EB5161-A236-4E7E-B1CD-D0BF52E3A87E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{83EB5161-A236-4E7E-B1CD-D0BF52E3A87E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

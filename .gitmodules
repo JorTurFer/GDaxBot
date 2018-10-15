@@ -1,3 +1,0 @@
-[submodule "src/CoinbaseAPI"]
-	path = src/CoinbaseAPI
-	url = https://github.com/JorTurFer/coinbasepro-csharp
