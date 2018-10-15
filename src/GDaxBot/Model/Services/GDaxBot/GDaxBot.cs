@@ -3,6 +3,7 @@ using GDaxBot.Coinbase.Model.Services.Telegram;
 using GDaxBot.Data;
 using GDaxBot.Model.Entities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -16,18 +17,20 @@ namespace GDaxBot.Model.Services.GDaxBot
     {
         private readonly ITelegramBot _telegramBot;
         private readonly ICoinbaseService _coinbaseService;
+        private readonly ILogger<GDaxBotService> _logger;
 
         private bool _seguir = true;
         private readonly int _muestrasMinuto;
 
         private AutoResetEvent _eventoCierre = new AutoResetEvent(false);
 
-        public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService, IConfiguration config)
+        public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService, IConfiguration config, ILogger<GDaxBotService> logger)
         {
             _muestrasMinuto = config.GetValue<int>("Settings:MuestrasMinuto"); 
             _telegramBot = telegramBot;
             _coinbaseService = coinbaseService;
             coinbaseService.AcctionNeeded += CoinbaseService_AcctionNeeded;
+            _logger = logger;
         }
 
         private void CoinbaseService_AcctionNeeded(CoinbaseApiEventArgs e)
@@ -57,9 +60,16 @@ namespace GDaxBot.Model.Services.GDaxBot
             //Ciclo
             while (_seguir)
             {
-                if (Trigger.WaitOne((60 / _muestrasMinuto) * 1500))
-                    if (_seguir) //Añado este if para no ejecutar el check si estamos saliendo
-                        _coinbaseService.CheckProducts();
+                try
+                {
+                    if (Trigger.WaitOne((60 / _muestrasMinuto) * 1500))
+                        if (_seguir) //Añado este if para no ejecutar el check si estamos saliendo
+                            _coinbaseService.CheckProducts();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"{ex.Message},{ex.StackTrace}");
+                }
             }
         }
 
