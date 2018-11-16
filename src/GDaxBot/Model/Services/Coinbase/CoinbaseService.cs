@@ -76,6 +76,9 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                 {
                     var valorMarcado = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto)
                                                             .First().ValorMarcado;
+                    //evito crashes si se marca a 0
+                    if (valorMarcado == 0)
+                        continue;
                     var desviacion = ((producto.Valor - valorMarcado) * 100) / valorMarcado;
                     var ajustes = usuario.AjustesProductos.Where(x => x.IdProducto == producto.IdProducto).First();
 
