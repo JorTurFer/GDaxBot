@@ -38,6 +38,7 @@ namespace GDaxBot.Model.Services.GDaxBot
 
         public void Start()
         {
+            _logger.LogInformation($"Iniciando servicio");
             _seguir = true;
             AutoResetEvent Trigger = new AutoResetEvent(true);
             //Disparador de triggers de ciclo
