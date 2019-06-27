@@ -17,11 +17,11 @@ namespace GDaxBot.Model.Services.GDaxBot
         private bool _seguir = true;
         private readonly int _muestrasMinuto;
 
-        private AutoResetEvent _eventoCierre = new AutoResetEvent(false);
+        private readonly AutoResetEvent _eventoCierre = new AutoResetEvent(false);
 
         public GDaxBotService(ITelegramBot telegramBot, ICoinbaseService coinbaseService, IConfiguration config, ILogger<GDaxBotService> logger)
         {
-            _muestrasMinuto = config.GetValue<int>("Settings:MuestrasMinuto"); 
+            _muestrasMinuto = config.GetValue<int>("Settings:MuestrasMinuto");
             _telegramBot = telegramBot;
             _coinbaseService = coinbaseService;
             coinbaseService.AcctionNeeded += CoinbaseService_AcctionNeeded;
@@ -30,7 +30,7 @@ namespace GDaxBot.Model.Services.GDaxBot
 
         private void CoinbaseService_AcctionNeeded(CoinbaseApiEventArgs e)
         {
-            foreach(var session in e.UsuarioNotifiacion.Sesiones)
+            foreach (var session in e.UsuarioNotifiacion.Sesiones)
             {
                 _telegramBot.SendMessage(session.IdTelegram, e.Mensaje);
             }
@@ -40,7 +40,7 @@ namespace GDaxBot.Model.Services.GDaxBot
         {
             _logger.LogInformation($"Iniciando servicio");
             _seguir = true;
-            AutoResetEvent Trigger = new AutoResetEvent(true);
+            var Trigger = new AutoResetEvent(true);
             //Disparador de triggers de ciclo
             new Thread(() =>
             {
@@ -59,8 +59,12 @@ namespace GDaxBot.Model.Services.GDaxBot
                 try
                 {
                     if (Trigger.WaitOne((60 / _muestrasMinuto) * 1500))
+                    {
                         if (_seguir) //Añado este if para no ejecutar el check si estamos saliendo
+                        {
                             _coinbaseService.CheckProducts();
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
