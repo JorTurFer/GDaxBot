@@ -392,7 +392,7 @@ namespace GDaxBot.Coinbase.Model.Services.Telegram
                             ajustes.ValorMarcado = context.Registros.Where(x => x.IdProducto == ajustes.IdProducto).OrderByDescending(x => x.Fecha).First().Valor;
                             sb.AppendLine($"El nuevo valor de referencia para {ajustes.Producto.Nombre} es {ajustes.ValorMarcado.ToString("0.00")}€");
                         }
-
+                        await context.SaveChangesAsync();
                     }
                     else if (AvailableActive(entrada[1]))
                     {
