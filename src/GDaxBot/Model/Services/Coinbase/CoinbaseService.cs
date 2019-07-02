@@ -107,6 +107,7 @@ namespace GDaxBot.Coinbase.Model.Services.Coinbase
                     {
                         AcctionNeeded?.Invoke(new CoinbaseApiEventArgs { UsuarioNotifiacion = usuario, Mensaje = sb.ToString() });
                         usuario.LastMessage = DateTime.Now;
+                        await context.SaveChangesAsync();
                     }
                 }
             }
